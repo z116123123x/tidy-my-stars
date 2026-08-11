@@ -1,0 +1,228 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-11T00:00:00Z",
+  "locale": "en",
+  "account": {
+    "login": "demo-account",
+    "star_count": 12
+  },
+  "run": {
+    "likely_unstar_sensitivity": 5,
+    "analysis_status": "complete",
+    "application_status": "planned"
+  },
+  "lists": [
+    {
+      "id": "agent-workflows",
+      "name": "Agent Workflows",
+      "kind": "classification",
+      "description": "Runnable systems that coordinate agents through useful multi-step work."
+    },
+    {
+      "id": "agent-skills",
+      "name": "Agent Skills",
+      "kind": "classification",
+      "description": "Reusable capabilities that an agent can invoke as a focused module."
+    },
+    {
+      "id": "developer-tools",
+      "name": "Developer Tools",
+      "kind": "classification",
+      "description": "Tools that help people build, inspect, and maintain software."
+    },
+    {
+      "id": "design-and-3d",
+      "name": "Design & 3D",
+      "kind": "classification",
+      "description": "Visual design, geometry, and three-dimensional creation tools."
+    },
+    {
+      "id": "data-and-knowledge",
+      "name": "Data & Knowledge",
+      "kind": "classification",
+      "description": "Structured data, semantic models, retrieval, and knowledge systems."
+    },
+    {
+      "id": "security-and-testing",
+      "name": "Security & Testing",
+      "kind": "classification",
+      "description": "Defensive analysis, verification, and software quality tools."
+    },
+    {
+      "id": "likely-unstar",
+      "name": "Likely Unstar",
+      "kind": "review-queue",
+      "description": "AI recommendations for human review; nothing is unstarred automatically."
+    }
+  ],
+  "repositories": [
+    {
+      "full_name": "sample-labs/orbit-agent",
+      "url": "https://github.com/sample-labs/orbit-agent",
+      "description": "A visual workspace for coordinating research and publishing agents.",
+      "memberships": [
+        {
+          "list_id": "agent-workflows",
+          "reason": "It delivers a complete research-to-publication workflow rather than a single model call."
+        },
+        {
+          "list_id": "developer-tools",
+          "reason": "Its visual editor helps developers inspect and refine executable agent graphs."
+        }
+      ]
+    },
+    {
+      "full_name": "sample-labs/toolsmith",
+      "url": "https://github.com/sample-labs/toolsmith",
+      "description": "A toolkit for packaging small capabilities that agents can reuse.",
+      "memberships": [
+        {
+          "list_id": "agent-skills",
+          "reason": "It packages focused capabilities behind a reusable agent-facing interface."
+        },
+        {
+          "list_id": "developer-tools",
+          "reason": "It includes authoring and validation commands for people building those capabilities."
+        }
+      ]
+    },
+    {
+      "full_name": "sample-labs/vector-canvas",
+      "url": "https://github.com/sample-labs/vector-canvas",
+      "description": "A programmable editor for vector scenes and parametric geometry.",
+      "memberships": [
+        {
+          "list_id": "design-and-3d",
+          "reason": "Its primary outcome is editable visual and geometric design work."
+        },
+        {
+          "list_id": "developer-tools",
+          "reason": "Its scripting API makes the editor useful inside custom development pipelines."
+        }
+      ]
+    },
+    {
+      "full_name": "sample-labs/knowledge-map",
+      "url": "https://github.com/sample-labs/knowledge-map",
+      "description": "An interactive explorer for concepts, sources, and semantic relationships.",
+      "memberships": [
+        {
+          "list_id": "data-and-knowledge",
+          "reason": "It turns structured concepts and provenance into a browsable knowledge model."
+        }
+      ]
+    },
+    {
+      "full_name": "sample-labs/safe-scan",
+      "url": "https://github.com/sample-labs/safe-scan",
+      "description": "A reusable agent capability for inspecting untrusted project artifacts.",
+      "memberships": [
+        {
+          "list_id": "security-and-testing",
+          "reason": "It detects risky content and produces a defensive inspection report."
+        },
+        {
+          "list_id": "agent-skills",
+          "reason": "Agents can invoke the scanner as a bounded, reusable review capability."
+        }
+      ]
+    },
+    {
+      "full_name": "sample-labs/research-swarm",
+      "url": "https://github.com/sample-labs/research-swarm",
+      "description": "A coordinated workflow that collects, compares, and cites research sources.",
+      "memberships": [
+        {
+          "list_id": "agent-workflows",
+          "reason": "It coordinates distinct research roles into one cited investigation workflow."
+        },
+        {
+          "list_id": "data-and-knowledge",
+          "reason": "Its durable output is a source-linked body of structured research knowledge."
+        }
+      ]
+    },
+    {
+      "full_name": "sample-labs/schema-studio",
+      "url": "https://github.com/sample-labs/schema-studio",
+      "description": "A browser-based environment for designing and validating data contracts.",
+      "memberships": [
+        {
+          "list_id": "data-and-knowledge",
+          "reason": "It models structured data meaning and the relationships between fields."
+        },
+        {
+          "list_id": "developer-tools",
+          "reason": "It gives developers an interactive workflow for testing schema compatibility."
+        }
+      ]
+    },
+    {
+      "full_name": "sample-labs/pixel-forge",
+      "url": "https://github.com/sample-labs/pixel-forge",
+      "description": "A focused workspace for creating icons, sprites, and small visual systems.",
+      "memberships": [
+        {
+          "list_id": "design-and-3d",
+          "reason": "It supports a distinct visual-design workflow for reusable pixel assets."
+        }
+      ]
+    },
+    {
+      "full_name": "sample-labs/legacy-runner",
+      "url": "https://github.com/sample-labs/legacy-runner",
+      "description": "An early agent runner whose supported successor covers the same workflow.",
+      "memberships": [
+        {
+          "list_id": "agent-workflows",
+          "reason": "It remains an executable agent workflow despite its legacy status."
+        },
+        {
+          "list_id": "likely-unstar",
+          "reason": "Likely unstar: the maintained successor preserves the useful workflow with clearer operation and support."
+        }
+      ]
+    },
+    {
+      "full_name": "sample-labs/duplicate-shell",
+      "url": "https://github.com/sample-labs/duplicate-shell",
+      "description": "A small terminal helper duplicated by broader tools in this collection.",
+      "memberships": [
+        {
+          "list_id": "developer-tools",
+          "reason": "It provides a narrow command-line convenience for software work."
+        },
+        {
+          "list_id": "likely-unstar",
+          "reason": "Likely unstar: its only practical capability is already covered by several stronger maintained tools in the collection."
+        }
+      ]
+    },
+    {
+      "full_name": "sample-labs/abandoned-widget",
+      "url": "https://github.com/sample-labs/abandoned-widget",
+      "description": "A proof-of-concept widget that never developed a reusable outcome.",
+      "memberships": [
+        {
+          "list_id": "likely-unstar",
+          "reason": "Likely unstar: the prototype offers no durable practical, learning, reference, or distinctive value to keep."
+        }
+      ],
+      "unclassified_reason": "The available evidence does not support a durable browsing destination beyond review for removal."
+    },
+    {
+      "full_name": "sample-labs/unclear-prototype",
+      "url": "https://github.com/sample-labs/unclear-prototype",
+      "description": null,
+      "memberships": [],
+      "unclassified_reason": "The complete available evidence is still insufficient to support a useful classification."
+    }
+  ],
+  "validation": {
+    "coverage_status": "complete",
+    "semantic_review": "passed",
+    "notes": [
+      "Synthetic public demo data; repository identities and decisions are fictional."
+    ]
+  }
+}

@@ -16,6 +16,21 @@ This repository contains two portable Agent Skills that work as one flow:
 
 Running `Tidy my stars` is enough. A second command is not required.
 
+## Report preview
+
+The generated report is a navigable collection explorer, not a flat export.
+Start from a compact overview or site map, search repositories, Lists, and
+exact classification reasons, follow overlapping Lists, and review each
+Likely Unstar suggestion without changing GitHub.
+
+![Synthetic Stars Library overview with persistent navigation, collection counts, and direct paths to repositories, Lists, and Likely Unstar review.](docs/assets/report-overview.jpg)
+
+![Synthetic Likely Unstar review with the AI rationale, remaining List classification, and local Keep, Decide later, and Consider unstar controls.](docs/assets/report-review.jpg)
+
+_These images use [entirely synthetic demo data](docs/demo/synthetic-analysis.json).
+Real reports can expose private repositories, memberships, and AI review
+reasons, so keep them private unless separately reviewed for publication._
+
 ## What one run does
 
 1. Reads every current Star, List, membership, and complete default README.

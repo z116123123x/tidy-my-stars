@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import test from 'node:test';
+import { validateAnalysis } from '../../skills/explain-my-stars/scripts/analysis-contract.mjs';
 
 const root = resolve(import.meta.dirname, '../..');
 const skills = [
@@ -18,6 +19,11 @@ const recoverySource = readFileSync(
 );
 const gitignoreSource = readFileSync(join(root, '.gitignore'), 'utf8');
 const readmeSource = readFileSync(join(root, 'README.md'), 'utf8');
+const demoAnalysisPath = join(root, 'docs/demo/synthetic-analysis.json');
+const demoAssets = [
+  join(root, 'docs/assets/report-overview.jpg'),
+  join(root, 'docs/assets/report-review.jpg')
+];
 
 function localMarkdownLinks(source) {
   return [...source.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)]
@@ -159,6 +165,24 @@ test('public quickstart installs the complete bundle and keeps previews private'
   assert.match(readmeSource, /\[Security Policy\]\(SECURITY\.md\)/);
   for (const path of ['stars-analysis.json', 'stars-rebuild-recovery.json', 'stars-site/', 'site-verification.json', 'browser-evidence.json']) {
     assert.ok(gitignoreSource.includes(`**/${path}`), `${path} must be ignored at any worktree depth`);
+  }
+});
+
+test('public report preview is local, validated, and entirely synthetic', () => {
+  const demo = JSON.parse(readFileSync(demoAnalysisPath, 'utf8'));
+  const result = validateAnalysis(demo);
+
+  assert.equal(result.valid, true, result.errors.join('\n'));
+  assert.equal(demo.account.login, 'demo-account');
+  assert.ok(demo.repositories.every((repository) => repository.full_name.startsWith('sample-labs/')));
+  assert.match(demo.validation.notes.join(' '), /synthetic public demo data/i);
+  assert.match(readmeSource, /docs\/demo\/synthetic-analysis\.json/);
+
+  for (const asset of demoAssets) {
+    const bytes = readFileSync(asset);
+    assert.deepEqual([...bytes.subarray(0, 2)], [0xff, 0xd8], `${asset} must be a JPEG`);
+    assert.ok(bytes.length < 500_000, `${asset} should stay lightweight`);
+    assert.ok(readmeSource.includes(asset.slice(root.length + 1)), `${asset} must be linked from README`);
   }
 });
 
