@@ -1,0 +1,41 @@
+{
+  "name": "explain-my-stars-site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.12.1",
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0",
+    "npm": ">=10"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "test": "vitest run",
+    "typecheck": "tsc -b --pretty false"
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "1.1.23",
+    "clsx": "2.1.1",
+    "fuse.js": "7.5.0",
+    "lucide-react": "1.30.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-router-dom": "7.18.2",
+    "react-virtuoso": "4.18.11",
+    "recharts": "3.10.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.3",
+    "@types/node": "24.13.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "@vitejs/plugin-react": "6.0.5",
+    "jsdom": "30.0.1",
+    "typescript": "7.0.2",
+    "vite": "8.2.1",
+    "vitest": "4.1.10"
+  }
+}

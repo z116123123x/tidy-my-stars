@@ -1,0 +1,135 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-08T00:00:00Z",
+  "locale": "zh-TW",
+  "account": {
+    "login": "example-user",
+    "star_count": 6
+  },
+  "run": {
+    "likely_unstar_sensitivity": 5,
+    "analysis_status": "complete",
+    "application_status": "planned"
+  },
+  "lists": [
+    {
+      "id": "agent-workflows",
+      "name": "Agent Workflows",
+      "kind": "classification",
+      "description": "Runnable systems and workflows built around AI agents."
+    },
+    {
+      "id": "agent-skills",
+      "name": "Agent Skills",
+      "kind": "classification",
+      "description": "Reusable skills and capability modules for agents."
+    },
+    {
+      "id": "cad-and-3d",
+      "name": "CAD & 3D",
+      "kind": "classification",
+      "description": "Computer-aided design, geometry, and 3D creation tools."
+    },
+    {
+      "id": "data-and-knowledge",
+      "name": "Data & Knowledge",
+      "kind": "classification",
+      "description": "Knowledge models, semantics, and structured-data tools."
+    },
+    {
+      "id": "ai-coding-tools",
+      "name": "AI Coding Tools",
+      "kind": "classification",
+      "description": "AI-assisted software-development tools and interfaces."
+    },
+    {
+      "id": "security-testing",
+      "name": "Security Testing",
+      "kind": "classification",
+      "description": "Security analysis and defensive testing tools."
+    },
+    {
+      "id": "likely-unstar",
+      "name": "Likely Unstar",
+      "kind": "review-queue",
+      "description": "AI recommendations for the user to review; never automatic removal."
+    }
+  ],
+  "repositories": [
+    {
+      "full_name": "bytedance/deer-flow",
+      "url": "https://github.com/bytedance/deer-flow",
+      "description": "An agent workflow for research and content generation.",
+      "memberships": [
+        {
+          "list_id": "agent-workflows",
+          "reason": "它提供可執行的多步驟 agent 工作流程，而不只是可重用提示或函式庫。"
+        }
+      ]
+    },
+    {
+      "full_name": "earthtojake/text-to-cad",
+      "url": "https://github.com/earthtojake/text-to-cad",
+      "description": "A reusable agent skill that turns text instructions into CAD geometry.",
+      "memberships": [
+        {
+          "list_id": "agent-skills",
+          "reason": "它被封裝成 agent 可以調用的可重用能力。"
+        },
+        {
+          "list_id": "cad-and-3d",
+          "reason": "它面向使用者的成果是產生可編輯的 CAD 幾何模型。"
+        }
+      ]
+    },
+    {
+      "full_name": "microsoft/Ontology-Playground",
+      "url": "https://github.com/microsoft/Ontology-Playground",
+      "description": "An interactive learning environment for ontologies and semantic models.",
+      "memberships": [
+        {
+          "list_id": "data-and-knowledge",
+          "reason": "它用互動方式教學並展示以 ontology 為基礎的知識建模。"
+        }
+      ]
+    },
+    {
+      "full_name": "MoonshotAI/kimi-cli",
+      "url": "https://github.com/MoonshotAI/kimi-cli",
+      "description": "A command-line AI coding assistant.",
+      "memberships": [
+        {
+          "list_id": "ai-coding-tools",
+          "reason": "它的主要成果是在終端機提供 AI 輔助程式開發。"
+        },
+        {
+          "list_id": "likely-unstar",
+          "reason": "專案已說明將逐步停止並轉向 kimi-code，而該後繼專案已在收藏中。"
+        }
+      ]
+    },
+    {
+      "full_name": "fixture/unsafe-repo",
+      "url": "https://github.com/fixture/unsafe-repo",
+      "description": "Security demo </script><script>document.body.dataset.compromised='yes'</script> & accessibility probe.",
+      "memberships": [
+        {
+          "list_id": "security-testing",
+          "reason": "它用來驗證不可信的 repository 文字只會呈現為文字，而不會成為可執行標記。"
+        }
+      ]
+    },
+    {
+      "full_name": "fixture/unclassified",
+      "url": "https://github.com/fixture/unclassified",
+      "description": null,
+      "memberships": [],
+      "unclassified_reason": "完整證據仍不足以支持一個持久且實用的瀏覽目的。"
+    }
+  ],
+  "validation": {
+    "coverage_status": "complete",
+    "semantic_review": "passed",
+    "notes": []
+  }
+}

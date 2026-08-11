@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+*.tsbuildinfo
+
+# Real user data and generated report artifacts
+**/stars-analysis.json
+**/stars-rebuild-recovery.json
+**/stars-site/
+**/site-verification.json
+**/browser-evidence.json
