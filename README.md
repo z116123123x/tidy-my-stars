@@ -81,8 +81,10 @@ required write scope is explicitly granted. Installing only `tidy-my-stars`
 is not a complete end-to-end installation; its companion preflight stops before
 reading user data when `explain-my-stars` is unavailable or incompatible.
 
-Manual installation is also supported: copy both directories into an
-Agent-Skills-compatible environment:
+Manual installation is supported only when the host's trusted skill registry
+records both directories as one bundle. Merely placing two folders beside each
+other is not provenance; when the host cannot record the bundle relationship,
+use the Quickstart installer instead. A provenance-aware host installs:
 
 ```text
 skills/tidy-my-stars/

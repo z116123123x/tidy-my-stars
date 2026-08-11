@@ -39,7 +39,12 @@ test('both skills have valid concise metadata and resolvable direct references',
     assert.equal(license, 'Apache-2.0', `${skill} must expose its public license`);
     assert.ok(compatibility && compatibility.length <= 500, `${skill} must expose its requirements`);
     assert.match(compatibility, /Node\.js \^22\.22\.2 \|\| \^24\.15\.0 \|\| >=26\.0\.0/);
-    assert.match(frontmatter[1], /canonical-source:\s*["']https:\/\/github\.com\/z116123123x\/tidy-my-stars["']/);
+    if (name === 'tidy-my-stars') {
+      assert.doesNotMatch(frontmatter[1], /canonical-source:/);
+      assert.doesNotMatch(frontmatter[1], /https?:\/\//);
+    } else {
+      assert.match(frontmatter[1], /canonical-source:\s*["']https:\/\/github\.com\/z116123123x\/tidy-my-stars["']/);
+    }
     assert.match(frontmatter[1], new RegExp(`bundle-contract:\\s*["']${bundleContract}["']`));
     assert.ok(source.split('\n').length <= 100, `${skill} must remain at most 100 lines`);
 
@@ -68,21 +73,23 @@ test('tidy is one command through the validated report without granting GitHub w
   assert.match(tidySource, /Never unstar a repository automatically/);
 });
 
-test('tidy preflights only a canonical compatible companion before reading user data', () => {
+test('tidy preflights an already-installed same-bundle companion before reading user data', () => {
   const preflight = tidySource.indexOf('## Preflight the companion before user data');
   const inventory = tidySource.indexOf('Inventory the whole account');
   assert.ok(preflight >= 0 && preflight < inventory);
   assert.match(tidySource, /Before reading any Star, List, membership, account field, README, existing analysis, or other user data/);
-  assert.match(tidySource, /trusted local skill installer/);
+  assert.match(tidySource, /already-installed `explain-my-stars`/);
   assert.match(tidySource, /same `bundle-contract` value/);
-  assert.match(tidySource, /If trusted installer provenance exposes an immutable release tag or commit for either skill, require both skills to expose and match that same ref/);
-  assert.match(tidySource, /only when .*trusted provenance supplies an exact immutable tag or commit/);
-  assert.match(tidySource, /If no immutable ref is known.*do not auto-install/);
-  assert.match(tidySource, /https:\/\/github\.com\/z116123123x\/tidy-my-stars/);
+  assert.match(tidySource, /environment- or installer-owned metadata as part of the same installed bundle/);
+  assert.match(tidySource, /Do not treat arbitrary source-authored provenance claims as trusted/);
+  assert.match(tidySource, /source or package identity or an immutable release tag or commit, require both skills to expose and match it/);
+  assert.match(tidySource, /Validate any per-skill digest with that installer's integrity mechanism; per-skill digests need not equal/);
+  assert.match(tidySource, /Never fetch, download, install, update, search for, or run setup for a companion during this workflow/);
   assert.match(tidySource, /stop before processing any user data/);
-  assert.ok(
-    tidySource.includes('npx skills add z116123123x/tidy-my-stars --skill tidy-my-stars --skill explain-my-stars')
-  );
+  assert.match(tidySource, /trusted out-of-band setup/);
+  assert.doesNotMatch(tidySource, /https?:\/\//);
+  assert.doesNotMatch(tidySource, /\bnpx\b/);
+  assert.doesNotMatch(tidySource, /auto-install/i);
 });
 
 test('tidy establishes a private per-run directory before inventorying user data', () => {
@@ -142,6 +149,8 @@ test('public quickstart installs the complete bundle and keeps previews private'
     readmeSource.includes('npx skills add z116123123x/tidy-my-stars \\\n  --skill tidy-my-stars \\\n  --skill explain-my-stars')
   );
   assert.match(readmeSource, /chat prompt, not a shell command/);
+  assert.match(readmeSource, /Manual installation is supported only when the host's trusted skill registry/);
+  assert.match(readmeSource, /Merely placing two folders beside each\s+other is not provenance/);
   assert.match(readmeSource, /\^22\.22\.2 \|\| \^24\.15\.0 \|\| >=26\.0\.0/);
   assert.match(readmeSource, /python3 -m http\.server --bind 127\.0\.0\.1 8766/);
   assert.match(readmeSource, /py -m http\.server --bind 127\.0\.0\.1 8766/);
