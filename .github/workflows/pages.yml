@@ -15,7 +15,7 @@ permissions: {}
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -24,8 +24,6 @@ jobs:
       contents: read
     env:
       DEMO_ANALYSIS: docs/demo/synthetic-analysis.json
-      DEMO_SITE: ${{ runner.temp }}/stars-site
-      DEMO_RECEIPT: ${{ runner.temp }}/site-verification.json
     steps:
       - name: Check out the exact source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -56,16 +54,16 @@ jobs:
         run: >-
           node skills/explain-my-stars/scripts/build-site.mjs
           --input "$DEMO_ANALYSIS"
-          --output "$DEMO_SITE"
+          --output "$RUNNER_TEMP/stars-site"
 
       - name: Verify deterministic output and publication boundaries
         shell: bash
         run: |
           node skills/explain-my-stars/scripts/verify-site.mjs \
             --input "$DEMO_ANALYSIS" \
-            --site "$DEMO_SITE" \
-            --output "$DEMO_RECEIPT"
-          test -z "$(find "$DEMO_SITE" -type l -print -quit)"
+            --site "$RUNNER_TEMP/stars-site" \
+            --output "$RUNNER_TEMP/site-verification.json"
+          test -z "$(find "$RUNNER_TEMP/stars-site" -type l -print -quit)"
           jq -e '
             (.status == "passed" or .status == "passed-with-limitations") and
             ([
@@ -74,7 +72,7 @@ jobs:
               .checks.react_projection.status,
               .checks.app_structure.status
             ] | all(. == "passed"))
-          ' "$DEMO_RECEIPT"
+          ' "$RUNNER_TEMP/site-verification.json"
 
       - name: Upload the exact verified site
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
@@ -94,7 +92,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
       - name: Deploy the verified synthetic report
         id: deployment

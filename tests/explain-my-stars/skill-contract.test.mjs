@@ -190,9 +190,10 @@ test('Pages publishes only the fixed validated synthetic demo with least-privile
   assert.match(pagesWorkflowSource, /^\s*workflow_dispatch:\s*$/m);
   assert.doesNotMatch(pagesWorkflowSource, /workflow_call:|pull_request:|\$\{\{\s*inputs\./);
   assert.match(pagesWorkflowSource, /DEMO_ANALYSIS: docs\/demo\/synthetic-analysis\.json/);
+  assert.doesNotMatch(pagesWorkflowSource, /DEMO_(?:SITE|RECEIPT):\s*\$\{\{\s*runner\.temp/);
   assert.match(pagesWorkflowSource, /validate-analysis\.mjs "\$DEMO_ANALYSIS"/);
-  assert.match(pagesWorkflowSource, /build-site\.mjs[\s\S]*--input "\$DEMO_ANALYSIS"[\s\S]*--output "\$DEMO_SITE"/);
-  assert.match(pagesWorkflowSource, /verify-site\.mjs[\s\S]*--input "\$DEMO_ANALYSIS"[\s\S]*--site "\$DEMO_SITE"/);
+  assert.match(pagesWorkflowSource, /build-site\.mjs[\s\S]*--input "\$DEMO_ANALYSIS"[\s\S]*--output "\$RUNNER_TEMP\/stars-site"/);
+  assert.match(pagesWorkflowSource, /verify-site\.mjs[\s\S]*--input "\$DEMO_ANALYSIS"[\s\S]*--site "\$RUNNER_TEMP\/stars-site"/);
   assert.match(pagesWorkflowSource, /build:[\s\S]*permissions:\s*\n\s+contents: read/);
   assert.match(pagesWorkflowSource, /deploy:[\s\S]*permissions:\s*\n\s+pages: write\s*\n\s+id-token: write/);
   assert.match(pagesWorkflowSource, /if: github\.ref == 'refs\/heads\/main'/);
@@ -200,7 +201,8 @@ test('Pages publishes only the fixed validated synthetic demo with least-privile
   assert.match(pagesWorkflowSource, /actions\/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1/);
   assert.match(pagesWorkflowSource, /actions\/setup-node@820762786026740c76f36085b0efc47a31fe5020/);
   assert.match(pagesWorkflowSource, /actions\/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9/);
-  assert.match(pagesWorkflowSource, /actions\/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b/);
+  assert.match(pagesWorkflowSource, /cancel-in-progress: false/);
+  assert.match(pagesWorkflowSource, /actions\/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d/);
   assert.match(pagesWorkflowSource, /actions\/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128/);
 });
 
