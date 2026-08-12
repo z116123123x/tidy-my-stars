@@ -1,0 +1,101 @@
+name: Deploy synthetic demo to Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/pages.yml
+      - docs/demo/synthetic-analysis.json
+      - skills/explain-my-stars/scripts/**
+      - skills/explain-my-stars/site/**
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      DEMO_ANALYSIS: docs/demo/synthetic-analysis.json
+      DEMO_SITE: ${{ runner.temp }}/stars-site
+      DEMO_RECEIPT: ${{ runner.temp }}/site-verification.json
+    steps:
+      - name: Check out the exact source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Use the supported Node.js runtime
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24.15.0
+          cache: npm
+          cache-dependency-path: skills/explain-my-stars/site/package-lock.json
+
+      - name: Install locked report dependencies
+        run: npm ci
+        working-directory: skills/explain-my-stars/site
+
+      - name: Validate the fixed synthetic analysis
+        run: node skills/explain-my-stars/scripts/validate-analysis.mjs "$DEMO_ANALYSIS"
+
+      - name: Test the bundled report system
+        run: npm test
+        working-directory: skills/explain-my-stars/site
+
+      - name: Typecheck the bundled report system
+        run: npm run typecheck
+        working-directory: skills/explain-my-stars/site
+
+      - name: Build the synthetic report from scratch
+        run: >-
+          node skills/explain-my-stars/scripts/build-site.mjs
+          --input "$DEMO_ANALYSIS"
+          --output "$DEMO_SITE"
+
+      - name: Verify deterministic output and publication boundaries
+        shell: bash
+        run: |
+          node skills/explain-my-stars/scripts/verify-site.mjs \
+            --input "$DEMO_ANALYSIS" \
+            --site "$DEMO_SITE" \
+            --output "$DEMO_RECEIPT"
+          test -z "$(find "$DEMO_SITE" -type l -print -quit)"
+          jq -e '
+            (.status == "passed" or .status == "passed-with-limitations") and
+            ([
+              .checks.schema.status,
+              .checks.data_identity.status,
+              .checks.react_projection.status,
+              .checks.app_structure.status
+            ] | all(. == "passed"))
+          ' "$DEMO_RECEIPT"
+
+      - name: Upload the exact verified site
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        with:
+          path: ${{ runner.temp }}/stars-site
+          include-hidden-files: true
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+
+      - name: Deploy the verified synthetic report
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5

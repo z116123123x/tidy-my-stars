@@ -19,6 +19,7 @@ const recoverySource = readFileSync(
 );
 const gitignoreSource = readFileSync(join(root, '.gitignore'), 'utf8');
 const readmeSource = readFileSync(join(root, 'README.md'), 'utf8');
+const pagesWorkflowSource = readFileSync(join(root, '.github/workflows/pages.yml'), 'utf8');
 const demoAnalysisPath = join(root, 'docs/demo/synthetic-analysis.json');
 const demoAssets = [
   join(root, 'docs/assets/report-overview.jpg'),
@@ -166,6 +167,41 @@ test('public quickstart installs the complete bundle and keeps previews private'
   for (const path of ['stars-analysis.json', 'stars-rebuild-recovery.json', 'stars-site/', 'site-verification.json', 'browser-evidence.json']) {
     assert.ok(gitignoreSource.includes(`**/${path}`), `${path} must be ignored at any worktree depth`);
   }
+});
+
+test('README first screen leads with the live demo, complete bundle, and no-auto-unstar boundary', () => {
+  const preview = readmeSource.indexOf('## Report preview');
+  const demo = readmeSource.indexOf('https://z116123123x.github.io/tidy-my-stars/');
+  const quickstart = readmeSource.indexOf('## Quickstart');
+  const install = readmeSource.indexOf('npx skills add z116123123x/tidy-my-stars');
+  const prompt = readmeSource.indexOf('Tidy my stars');
+  const safety = readmeSource.indexOf('Never automatically unstars anything');
+
+  assert.ok(preview > 0);
+  for (const [name, position] of Object.entries({ demo, quickstart, install, prompt, safety })) {
+    assert.ok(position >= 0 && position < preview, `${name} must appear before the report preview`);
+  }
+  assert.match(readmeSource, /The demo is entirely fictional and connects to no GitHub account/);
+  assert.doesNotMatch(readmeSource, /live demo \(coming soon\)/i);
+  assert.equal(readmeSource.match(/^## Quickstart$/gm)?.length, 1);
+});
+
+test('Pages publishes only the fixed validated synthetic demo with least-privilege jobs', () => {
+  assert.match(pagesWorkflowSource, /^\s*workflow_dispatch:\s*$/m);
+  assert.doesNotMatch(pagesWorkflowSource, /workflow_call:|pull_request:|\$\{\{\s*inputs\./);
+  assert.match(pagesWorkflowSource, /DEMO_ANALYSIS: docs\/demo\/synthetic-analysis\.json/);
+  assert.match(pagesWorkflowSource, /validate-analysis\.mjs "\$DEMO_ANALYSIS"/);
+  assert.match(pagesWorkflowSource, /build-site\.mjs[\s\S]*--input "\$DEMO_ANALYSIS"[\s\S]*--output "\$DEMO_SITE"/);
+  assert.match(pagesWorkflowSource, /verify-site\.mjs[\s\S]*--input "\$DEMO_ANALYSIS"[\s\S]*--site "\$DEMO_SITE"/);
+  assert.match(pagesWorkflowSource, /build:[\s\S]*permissions:\s*\n\s+contents: read/);
+  assert.match(pagesWorkflowSource, /deploy:[\s\S]*permissions:\s*\n\s+pages: write\s*\n\s+id-token: write/);
+  assert.match(pagesWorkflowSource, /if: github\.ref == 'refs\/heads\/main'/);
+  assert.match(pagesWorkflowSource, /include-hidden-files: true/);
+  assert.match(pagesWorkflowSource, /actions\/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1/);
+  assert.match(pagesWorkflowSource, /actions\/setup-node@820762786026740c76f36085b0efc47a31fe5020/);
+  assert.match(pagesWorkflowSource, /actions\/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9/);
+  assert.match(pagesWorkflowSource, /actions\/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b/);
+  assert.match(pagesWorkflowSource, /actions\/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128/);
 });
 
 test('public report preview is local, validated, and entirely synthetic', () => {

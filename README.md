@@ -4,17 +4,35 @@
 [![Release](https://img.shields.io/github/v/release/z116123123x/tidy-my-stars)](https://github.com/z116123123x/tidy-my-stars/releases)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-Organize every GitHub Star into useful, overlapping GitHub Lists, then turn the
-result into a report you can actually browse.
+Turn every GitHub Star into useful, overlapping Lists and a searchable report.
 
-This repository contains two portable Agent Skills that work as one flow:
+**Never automatically unstars anything.** `Likely Unstar` is a review queue;
+the user always makes the final decision.
 
-- **`tidy-my-stars`** reads the complete collection, designs the Lists, prepares
-  or applies one full replacement, and writes `stars-analysis.json`.
-- **`explain-my-stars`** is invoked automatically with that validated file and
-  builds a searchable report without changing the analysis.
+[**Try the live synthetic demo →**](https://z116123123x.github.io/tidy-my-stars/)
 
-Running `Tidy my stars` is enough. A second command is not required.
+_The demo is entirely fictional and connects to no GitHub account._
+
+## Quickstart
+
+Install both skills together:
+
+```bash
+npx skills add z116123123x/tidy-my-stars \
+  --skill tidy-my-stars \
+  --skill explain-my-stars
+```
+
+Start a new agent session, then send this as a chat prompt, not a shell command:
+
+```text
+Tidy my stars
+```
+
+This is a two-skill bundle. `tidy-my-stars` analyzes the complete collection
+and writes validated `stars-analysis.json`; it then automatically invokes
+`explain-my-stars` to build the searchable report from those exact bytes. One
+prompt runs both, and installing only one is incomplete.
 
 ## Report preview
 
@@ -73,22 +91,7 @@ The stable boundary between both skills is `stars-analysis.json`; the report
 system never decides Lists, memberships, reasons, sensitivity, or queue
 eligibility.
 
-## Quickstart
-
-Install both skills together from the canonical repository:
-
-```bash
-npx skills add z116123123x/tidy-my-stars \
-  --skill tidy-my-stars \
-  --skill explain-my-stars
-```
-
-Start a new agent session so it discovers the installation, then send this as
-a chat prompt, not a shell command:
-
-```text
-Tidy my stars
-```
+## Installation details
 
 The default run produces a read-only full-replacement plan, validated analysis,
 and report. GitHub Lists change only after the exact diff is confirmed or the
