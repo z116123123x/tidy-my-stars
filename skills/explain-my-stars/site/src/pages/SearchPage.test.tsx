@@ -64,9 +64,44 @@ function HistoryHarness() {
 }
 
 function renderSearch(analysis: StarsAnalysis, initialEntry: string) {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-    ok: true,
-    json: async () => analysis
+  const analysisBytes = new TextEncoder().encode(JSON.stringify(analysis));
+  vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+    if (!String(input).endsWith('/data/report-provenance.json')) {
+      return { ok: true, arrayBuffer: async () => analysisBytes.slice().buffer };
+    }
+    const digest = await globalThis.crypto.subtle.digest('SHA-256', analysisBytes);
+    const starsAnalysisSha256 = Array.from(
+      new Uint8Array(digest),
+      (byte) => byte.toString(16).padStart(2, '0')
+    ).join('');
+    return {
+      ok: true,
+      json: async () => ({
+      schema_version: '1.0',
+      source: {
+        account_login: analysis.account.login,
+        generated_at: analysis.generated_at,
+        stars_analysis_bytes_sha256: starsAnalysisSha256
+      },
+      semantic: {
+        validation_status: 'passed',
+        candidate_sha256: '2'.repeat(64),
+        plan_sha256: '3'.repeat(64),
+        collection_receipt_sha256: '4'.repeat(64),
+        execution_receipts_sha256: '5'.repeat(64),
+        validation_receipt_sha256: '6'.repeat(64),
+        limitations: ['Offline semantic validation has external limits.']
+      },
+      application: {
+        status: 'planned',
+        claim_basis: 'no-application-receipt',
+        receipt_sha256: null,
+        validation_receipt_sha256: null,
+        final_state_sha256: null,
+        limitations: []
+      }
+      })
+    };
   }));
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>

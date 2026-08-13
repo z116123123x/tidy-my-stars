@@ -1,12 +1,13 @@
 import type {
   ReportModel,
+  ReportProvenance,
   Repository,
   SearchDocument,
   StarsAnalysis,
   StarsList
 } from '../types';
 
-export function buildReportModel(analysis: StarsAnalysis): ReportModel {
+export function buildReportModel(analysis: StarsAnalysis, provenance: ReportProvenance): ReportModel {
   const listsById = new Map(analysis.lists.map((list) => [list.id, list]));
   const repositoriesByName = new Map(
     analysis.repositories.map((repository) => [repository.full_name, repository])
@@ -51,6 +52,7 @@ export function buildReportModel(analysis: StarsAnalysis): ReportModel {
 
   return {
     analysis,
+    provenance,
     listsById,
     repositoriesByName,
     repositoriesByList,

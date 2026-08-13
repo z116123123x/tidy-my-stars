@@ -1,4 +1,4 @@
-import type { StarsAnalysis } from '../types';
+import type { ReportProvenance, StarsAnalysis } from '../types';
 
 export const fixture: StarsAnalysis = {
   schema_version: '1.0',
@@ -43,4 +43,30 @@ export const fixture: StarsAnalysis = {
     }
   ],
   validation: { coverage_status: 'complete', semantic_review: 'passed', notes: [] }
+};
+
+export const provenanceFixture: ReportProvenance = {
+  schema_version: '1.0',
+  source: {
+    account_login: fixture.account.login,
+    generated_at: fixture.generated_at,
+    stars_analysis_bytes_sha256: '1'.repeat(64)
+  },
+  semantic: {
+    validation_status: 'passed',
+    candidate_sha256: '2'.repeat(64),
+    plan_sha256: '3'.repeat(64),
+    collection_receipt_sha256: '4'.repeat(64),
+    execution_receipts_sha256: '5'.repeat(64),
+    validation_receipt_sha256: '6'.repeat(64),
+    limitations: ['Offline semantic validation has external limits.']
+  },
+  application: {
+    status: 'planned',
+    claim_basis: 'no-application-receipt',
+    receipt_sha256: null,
+    validation_receipt_sha256: null,
+    final_state_sha256: null,
+    limitations: []
+  }
 };

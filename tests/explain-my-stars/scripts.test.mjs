@@ -1,28 +1,46 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
-import { loadVerifiedRuntimeDependencies } from '../../skills/explain-my-stars/scripts/build-site.mjs';
+import { validateAnalysis } from '../../skills/explain-my-stars/scripts/analysis-contract.mjs';
+import { buildSiteFromSnapshot, loadVerifiedRuntimeDependencies } from '../../skills/explain-my-stars/scripts/build-site.mjs';
+import { OFFLINE_VALIDATION_LIMITATIONS } from '../../skills/explain-my-stars/scripts/semantic-contract.mjs';
+import { loadSemanticHandoff } from '../../skills/explain-my-stars/scripts/semantic-handoff.mjs';
+import { materializeSemanticRun } from '../tidy-my-stars/semantic-fixture.mjs';
 
 const root = resolve(import.meta.dirname, '../..');
-const fixture = join(import.meta.dirname, 'valid-analysis.json');
 const scripts = join(root, 'skills/explain-my-stars/scripts');
+const fixtureRoot = mkdtempSync(join(tmpdir(), 'explain-stars-semantic-fixture-'));
+const fixtureRun = materializeSemanticRun(join(fixtureRoot, 'semantic-run'), { locale: 'zh-TW' });
+const fixture = fixtureRun.analysisPath;
+const semanticRun = fixtureRun.directory;
+process.on('exit', () => rmSync(fixtureRoot, { recursive: true, force: true }));
+
+function withSemanticRun(script, args) {
+  if (!['validate-analysis.mjs', 'build-site.mjs', 'verify-site.mjs'].includes(script)
+      || args.includes('--semantic-run')) return args;
+  return [...args, '--semantic-run', semanticRun];
+}
 
 function run(script, args) {
-  return spawnSync(process.execPath, [join(scripts, script), ...args], {
+  return spawnSync(process.execPath, [join(scripts, script), ...withSemanticRun(script, args)], {
     cwd: root,
     encoding: 'utf8'
   });
 }
 
 function runFrom(scriptDirectory, script, args) {
-  return spawnSync(process.execPath, [join(scriptDirectory, script), ...args], {
+  return spawnSync(process.execPath, [join(scriptDirectory, script), ...withSemanticRun(script, args)], {
     cwd: root,
     encoding: 'utf8'
   });
+}
+
+function runWithoutSemanticRun(script, args) {
+  return spawnSync(process.execPath, [join(scripts, script), ...args], { cwd: root, encoding: 'utf8' });
 }
 
 function temporaryDirectory(t, prefix) {
@@ -49,6 +67,11 @@ function buildFixture(t, prefix = 'explain-stars-site-') {
   const result = run('build-site.mjs', ['--input', fixture, '--output', site]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   return { directory, site, result: JSON.parse(result.stdout) };
+}
+
+function isolatedSemanticFixture(t, prefix = 'explain-stars-semantic-run-') {
+  const directory = temporaryDirectory(t, prefix);
+  return materializeSemanticRun(join(directory, 'semantic-run'), { locale: 'zh-TW' });
 }
 
 function runtimeDependencyFixture(t) {
@@ -131,13 +154,108 @@ test('validator accepts one complete semantic analysis and reports exact counts'
   assert.equal(result.status, 0, result.stderr);
   const receipt = JSON.parse(result.stdout);
   assert.deepEqual(receipt.counts, {
-    repositories: 6,
-    classification_lists: 6,
+    repositories: 2,
+    classification_lists: 3,
     review_queues: 1,
-    classification_memberships: 6,
+    classification_memberships: 3,
     review_queue_memberships: 1,
-    unclassified: 1
+    unclassified: 0
   });
+  assert.match(receipt.semantic_validation.plan_sha256, /^[a-f0-9]{64}$/);
+  assert.match(receipt.semantic_validation.receipt_sha256, /^[a-f0-9]{64}$/);
+  assert.deepEqual(receipt.semantic_validation.limitations, [...OFFLINE_VALIDATION_LIMITATIONS]);
+});
+
+test('validator rejects unexpected fields at every stars-analysis object boundary', () => {
+  const baseline = JSON.parse(readFileSync(fixture, 'utf8'));
+  const baselineResult = validateAnalysis(baseline);
+  assert.equal(baselineResult.valid, true, baselineResult.errors.join('\n'));
+
+  const cases = [
+    ['root current Lists', (analysis) => { analysis.current_lists = []; }, '$: unexpected field "current_lists"'],
+    ['account extra', (analysis) => { analysis.account.display_name = 'Untrusted'; }, 'account: unexpected field "display_name"'],
+    ['run current memberships', (analysis) => { analysis.run.current_memberships = []; }, 'run: unexpected field "current_memberships"'],
+    ['List extra', (analysis) => { analysis.lists[0].color = 'blue'; }, 'lists[0]: unexpected field "color"'],
+    ['repository current Lists', (analysis) => { analysis.repositories[0].current_lists = []; }, 'repositories[0]: unexpected field "current_lists"'],
+    ['membership extra', (analysis) => { analysis.repositories[0].memberships[0].confidence = 1; }, 'repositories[0].memberships[0]: unexpected field "confidence"'],
+    ['validation current memberships', (analysis) => { analysis.validation.current_memberships = []; }, 'validation: unexpected field "current_memberships"']
+  ];
+
+  for (const [label, mutate, expectedError] of cases) {
+    const analysis = structuredClone(baseline);
+    mutate(analysis);
+    const result = validateAnalysis(analysis);
+    assert.equal(result.valid, false, label);
+    assert.ok(result.errors.includes(expectedError), `${label}: ${result.errors.join('\n')}`);
+  }
+});
+
+test('all public report CLIs require an explicit semantic run', () => {
+  assert.match(runWithoutSemanticRun('validate-analysis.mjs', [fixture]).stderr, /--semantic-run/);
+  assert.match(runWithoutSemanticRun('build-site.mjs', ['--input', fixture, '--output', 'unused']).stderr, /--semantic-run/);
+  assert.match(runWithoutSemanticRun('verify-site.mjs', ['--input', fixture, '--site', 'unused', '--output', 'unused.json']).stderr, /--semantic-run/);
+});
+
+test('standalone explain bundle carries the exact semantic validator implementation', () => {
+  assert.deepEqual(
+    readFileSync(join(scripts, 'semantic-contract.mjs')),
+    readFileSync(join(root, 'skills/tidy-my-stars/scripts/semantic-contract.mjs'))
+  );
+});
+
+test('standalone validator works without a tidy-my-stars sibling installation', (t) => {
+  const directory = temporaryDirectory(t, 'explain-stars-standalone-');
+  const installedScripts = join(directory, 'explain-my-stars', 'scripts');
+  cpSync(scripts, installedScripts, { recursive: true });
+  const result = runFrom(installedScripts, 'validate-analysis.mjs', [
+    fixture, '--semantic-run', semanticRun
+  ]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+});
+
+test('handoff rejects a valid but different analysis and a self-declared sidecar', (t) => {
+  const semanticFixture = isolatedSemanticFixture(t, 'explain-stars-handoff-tamper-');
+  const different = structuredClone(semanticFixture.plan.candidate);
+  different.locale = 'en';
+  const differentPath = join(semanticFixture.directory, '..', 'different-analysis.json');
+  writeFileSync(differentPath, `${JSON.stringify(different, null, 2)}\n`);
+  const mismatched = run('validate-analysis.mjs', [
+    differentPath, '--semantic-run', semanticFixture.directory
+  ]);
+  assert.notEqual(mismatched.status, 0);
+  assert.match(mismatched.stderr, /not exactly the validated semantic plan candidate/i);
+
+  const receiptPath = join(semanticFixture.directory, 'semantic-validation.json');
+  const receipt = JSON.parse(readFileSync(receiptPath, 'utf8'));
+  receipt.status = 'passed';
+  receipt.hashes.stars_analysis_sha256 = '0'.repeat(64);
+  writeFileSync(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`);
+  const selfDeclared = run('validate-analysis.mjs', [
+    semanticFixture.analysisPath, '--semantic-run', semanticFixture.directory
+  ]);
+  assert.notEqual(selfDeclared.status, 0);
+  assert.match(selfDeclared.stderr, /does not exactly match.*derived passing receipt/i);
+});
+
+test('validated snapshot is unforgeable and immune to post-validation file mutation', (t) => {
+  const semanticFixture = isolatedSemanticFixture(t, 'explain-stars-snapshot-');
+  const originalBytes = readFileSync(semanticFixture.analysisPath);
+  const snapshot = loadSemanticHandoff({
+    inputPath: semanticFixture.analysisPath,
+    semanticRunPath: semanticFixture.directory
+  });
+  assert.throws(
+    () => buildSiteFromSnapshot({ snapshot: {}, outputPath: join(semanticFixture.directory, '..', 'forged-site') }),
+    /validated semantic handoff snapshot is required/i
+  );
+
+  const mutated = structuredClone(semanticFixture.plan.candidate);
+  mutated.locale = 'en';
+  writeFileSync(semanticFixture.analysisPath, `${JSON.stringify(mutated, null, 2)}\n`);
+  writeFileSync(join(semanticFixture.directory, 'semantic-validation.json'), '{}\n');
+  const site = join(semanticFixture.directory, '..', 'snapshot-site');
+  buildSiteFromSnapshot({ snapshot, outputPath: site });
+  assert.deepEqual(readFileSync(join(site, 'data', 'stars-analysis.json')), originalBytes);
 });
 
 test('analysis loading rejects invalid UTF-8 instead of hashing replacement text', () => {
@@ -249,8 +367,8 @@ test('distinct case-sensitive List IDs are not treated as duplicates', () => {
   const input = join(directory, 'analysis.json');
   writeFileSync(input, JSON.stringify(analysis));
 
-  const result = run('validate-analysis.mjs', [input]);
-  assert.equal(result.status, 0, result.stderr);
+  const result = validateAnalysis(analysis);
+  assert.equal(result.valid, true, result.errors.join('\n'));
 });
 
 test('validator rejects List IDs that React Router cannot preserve as one path segment', () => {
@@ -293,17 +411,17 @@ test('validator accepts maximum GitHub identity lengths and rejects longer ident
   analysis.repositories[0].url = `https://github.com/${owner}/${repository}`;
   const input = join(directory, 'analysis.json');
   writeFileSync(input, JSON.stringify(analysis));
-  assert.equal(run('validate-analysis.mjs', [input]).status, 0);
+  assert.equal(validateAnalysis(analysis).valid, true);
 
   analysis.repositories[0].full_name = `${owner}x/${repository}`;
   analysis.repositories[0].url = `https://github.com/${owner}x/${repository}`;
   writeFileSync(input, JSON.stringify(analysis));
-  assert.notEqual(run('validate-analysis.mjs', [input]).status, 0);
+  assert.equal(validateAnalysis(analysis).valid, false);
 
   analysis.repositories[0].full_name = `${owner}/${repository}x`;
   analysis.repositories[0].url = `https://github.com/${owner}/${repository}x`;
   writeFileSync(input, JSON.stringify(analysis));
-  assert.notEqual(run('validate-analysis.mjs', [input]).status, 0);
+  assert.equal(validateAnalysis(analysis).valid, false);
 });
 
 test('builder preserves the exact frozen data and emits the complete localized React site contract', (t) => {
@@ -313,22 +431,40 @@ test('builder preserves the exact frozen data and emits the complete localized R
   assert.deepEqual(generatedBytes, inputBytes);
   assert.equal(result.input_sha256, createHash('sha256').update(inputBytes).digest('hex'));
   assert.deepEqual(result.counts, {
-    repositories: 6,
-    classification_lists: 6,
+    repositories: 2,
+    classification_lists: 3,
     review_queues: 1,
-    classification_memberships: 6,
+    classification_memberships: 3,
     review_queue_memberships: 1,
-    unclassified: 1
+    unclassified: 0
   });
 
   const buildInfo = JSON.parse(readFileSync(join(site, 'build-info.json'), 'utf8'));
-  assert.deepEqual(buildInfo.input, {
-    sha256: result.input_sha256,
-    repositories: 6,
-    lists: 7,
-    memberships: 7,
-    review_queue_memberships: 1
-  });
+  const provenance = JSON.parse(readFileSync(join(site, 'data', 'report-provenance.json'), 'utf8'));
+  assert.equal(existsSync(join(site, 'data', 'application-state.json')), false);
+  assert.equal(provenance.schema_version, '1.0');
+  assert.equal(provenance.source.account_login, fixtureRun.plan.candidate.account.login);
+  assert.equal(provenance.source.generated_at, fixtureRun.plan.candidate.generated_at);
+  assert.equal(provenance.source.stars_analysis_bytes_sha256, result.input_sha256);
+  assert.equal(provenance.semantic.validation_status, 'passed');
+  assert.deepEqual(provenance.semantic.limitations, [...OFFLINE_VALIDATION_LIMITATIONS]);
+  assert.equal(provenance.application.status, 'planned');
+  assert.equal(provenance.application.claim_basis, 'no-application-receipt');
+  assert.deepEqual(provenance.application.limitations, []);
+  assert.equal(
+    buildInfo.input.report_provenance_sha256,
+    createHash('sha256').update(readFileSync(join(site, 'data', 'report-provenance.json'))).digest('hex')
+  );
+  assert.equal(buildInfo.input.sha256, result.input_sha256);
+  assert.equal(buildInfo.input.repositories, 2);
+  assert.equal(buildInfo.input.lists, 4);
+  assert.equal(buildInfo.input.memberships, 4);
+  assert.equal(buildInfo.input.review_queue_memberships, 1);
+  for (const field of [
+    'semantic_candidate_sha256', 'semantic_plan_sha256',
+    'semantic_collection_receipt_sha256', 'semantic_execution_receipts_sha256',
+    'semantic_validation_receipt_sha256'
+  ]) assert.match(buildInfo.input[field], /^[a-f0-9]{64}$/);
   assert.equal(buildInfo.app.generator, 'explain-my-stars');
   assert.equal(buildInfo.app.implementation_id, 'bundled-react-v1');
   assert.equal(buildInfo.app.framework, 'React');
@@ -441,6 +577,21 @@ test('verification rejects an unexpected file added to the generated site', (t) 
   assert.match(receipt.checks.app_structure.evidence.failures.join('\n'), /fresh build|generated site differs/i);
 });
 
+test('verification rejects provenance that hides a semantic limitation', (t) => {
+  const { directory, site } = buildFixture(t, 'explain-stars-provenance-tamper-');
+  const provenancePath = join(site, 'data', 'report-provenance.json');
+  const provenance = JSON.parse(readFileSync(provenancePath, 'utf8'));
+  provenance.semantic.limitations.pop();
+  writeFileSync(provenancePath, `${JSON.stringify(provenance, null, 2)}\n`);
+
+  const output = join(directory, 'site-verification.json');
+  const result = run('verify-site.mjs', ['--input', fixture, '--site', site, '--output', output]);
+  assert.notEqual(result.status, 0);
+  const receipt = JSON.parse(readFileSync(output, 'utf8'));
+  assert.equal(receipt.checks.provenance_identity.status, 'failed');
+  assert.match(receipt.checks.app_structure.evidence.failures.join('\n'), /report provenance differs/i);
+});
+
 test('verification passes deterministic site checks with explicit browser limitations', (t) => {
   const { directory, site } = buildFixture(t, 'explain-stars-verify-site-');
   const output = join(directory, 'site-verification.json');
@@ -459,6 +610,9 @@ test('verification passes deterministic site checks with explicit browser limita
     builder: 'build-site.mjs'
   });
   assert.equal(receipt.checks.schema.status, 'passed');
+  assert.equal(receipt.checks.semantic_validation.status, 'passed');
+  assert.deepEqual(receipt.checks.semantic_validation.limitations, [...OFFLINE_VALIDATION_LIMITATIONS]);
+  for (const limitation of OFFLINE_VALIDATION_LIMITATIONS) assert.ok(receipt.limitations.includes(limitation));
   assert.equal(receipt.checks.data_identity.status, 'passed');
   assert.equal(receipt.checks.app_structure.status, 'passed');
   assert.equal(receipt.checks.browser.status, 'not-run');
@@ -511,7 +665,7 @@ test('builder rejects forged legacy markers and symlinked inputs inside the outp
   symlinkSync(generatedInput, inputAlias);
   const aliasResult = run('build-site.mjs', ['--input', inputAlias, '--output', site]);
   assert.notEqual(aliasResult.status, 0);
-  assert.match(aliasResult.stderr, /cannot contain the semantic input/i);
+  assert.match(aliasResult.stderr, /regular, non-symbolic-link file|cannot contain the semantic input/i);
   assert.deepEqual(readFileSync(generatedInput), originalBytes);
 });
 

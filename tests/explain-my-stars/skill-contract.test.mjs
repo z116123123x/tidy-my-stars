@@ -11,10 +11,18 @@ const skills = [
 ];
 const tidySource = readFileSync(skills[0], 'utf8');
 const explainSource = readFileSync(skills[1], 'utf8');
-const validatorFiles = ['analysis-contract.mjs', 'validate-analysis.mjs'];
+const validatorFiles = ['analysis-contract.mjs'];
 const bundleContract = 'tidy-explain-v1';
+const semanticContractPath = join(
+  root,
+  'skills/tidy-my-stars/references/semantic-analysis-contract.md'
+);
 const recoverySource = readFileSync(
   join(root, 'skills/tidy-my-stars/references/full-rebuild-recovery.md'),
+  'utf8'
+);
+const applicationSource = readFileSync(
+  join(root, 'skills/tidy-my-stars/references/application-receipt-contract.md'),
   'utf8'
 );
 const gitignoreSource = readFileSync(join(root, '.gitignore'), 'utf8');
@@ -24,6 +32,15 @@ const demoAnalysisPath = join(root, 'docs/demo/synthetic-analysis.json');
 const demoAssets = [
   join(root, 'docs/assets/report-overview.jpg'),
   join(root, 'docs/assets/report-review.jpg')
+];
+const appliedArtifactNames = [
+  'stars-lists-diff.json',
+  'stars-rebuild-recovery.json',
+  'stars-current-pre-write-state.json',
+  'application-preflight-validation.json',
+  'stars-final-state.json',
+  'application-receipt.json',
+  'application-validation.json'
 ];
 
 function localMarkdownLinks(source) {
@@ -135,12 +152,36 @@ test('tidy prepares recoverable state before the destructive full rebuild', () =
   const restoreStep = tidySource.indexOf('then restore its memberships');
   assert.ok(deleteStep >= 0 && deleteStep < createStep && createStep < restoreStep);
 
-  assert.match(recoverySource, /every pre-write List ID, name, description, and complete repository/);
-  assert.match(recoverySource, /every desired List name, description, kind, and complete repository/);
+  assert.match(recoverySource, /lists:\[\{list_id,name,description,repositories:\[full_name\]\}\]/);
+  assert.match(recoverySource, /exact_diff_sha256.*desired_projection_sha256/s);
+  assert.match(recoverySource, /complete desired List and membership plan lives in the sibling frozen/);
+  assert.match(recoverySource, /Do not\s+add repository node IDs or a second desired snapshot/);
   assert.match(recoverySource, /append-only operation journal/);
+  assert.match(recoverySource, /phase` is exactly `"prepared"`.*operation_journal` is\s+empty/s);
+  assert.match(recoverySource, /validate-application-preflight\.mjs/);
   assert.match(recoverySource, /record `critical-partial`/);
   assert.match(recoverySource, /No recovery path\s+may unstar a repository/);
   assert.match(gitignoreSource, /^\*\*\/stars-rebuild-recovery\.json$/m);
+});
+
+test('applied state is an external validated receipt and never rewrites the planned candidate', () => {
+  assert.match(tidySource, /references\/application-receipt-contract\.md/);
+  assert.match(tidySource, /never regenerate it or change `application_status:"planned"`/i);
+  assert.doesNotMatch(tidySource, /regenerate it from the verified final state/i);
+  assert.match(explainSource, /applied status is external presentation metadata/i);
+  assert.match(applicationSource, /stars-lists-diff\.json/);
+  assert.match(applicationSource, /stars-current-pre-write-state\.json/);
+  assert.match(applicationSource, /application-preflight-validation\.json/);
+  assert.match(applicationSource, /requires\s+`stars-analysis\.json` to equal `plan\.candidate`/);
+  assert.match(applicationSource, /application-validation\.json/);
+  assert.match(applicationSource, /does not prove that the user granted/i);
+  assert.match(applicationSource, /No unstar operation exists/i);
+  assert.match(applicationSource, /five-minute clock-skew tolerance/i);
+  for (const source of [tidySource, explainSource, readmeSource]) {
+    for (const artifact of appliedArtifactNames) {
+      assert.match(source, new RegExp(artifact.replaceAll('.', '\\.')), `missing applied artifact ${artifact}`);
+    }
+  }
 });
 
 test('tidy validation is independent of the caller current working directory', () => {
@@ -149,6 +190,84 @@ test('tidy validation is independent of the caller current working directory', (
     tidySource,
     /node <tidy-my-stars-skill-directory>\/scripts\/validate-analysis\.mjs <absolute-analysis-path>/
   );
+});
+
+test('tidy requires a complete isolated semantic pipeline before taxonomy projection', () => {
+  assert.ok(existsSync(semanticContractPath), 'tidy must ship its direct semantic-analysis contract');
+  const semanticSource = readFileSync(semanticContractPath, 'utf8');
+
+  assert.match(tidySource, /references\/semantic-analysis-contract\.md/);
+  assert.match(semanticSource, /complete default README/);
+  assert.match(semanticSource, /never\s+truncate, sample, summarize, or substitute/i);
+  assert.match(semanticSource, /SHA-256/);
+  assert.match(semanticSource, /byte length/);
+  assert.match(semanticSource, /contiguous byte\s+ranges/);
+  assert.match(semanticSource, /every byte exactly once/);
+  assert.match(semanticSource, /no\s+gaps or overlaps/i);
+
+  assert.match(semanticSource, /current List names, descriptions, (?:or )?memberships/i);
+  assert.match(semanticSource, /semantic author/i);
+  assert.match(semanticSource, /taxonomy author/i);
+  assert.match(semanticSource, /after the taxonomy candidate is frozen/i);
+
+  const assessments = semanticSource.indexOf('Complete every semantic assessment');
+  const globalTaxonomy = semanticSource.indexOf('Synthesize one global taxonomy');
+  const candidateFreeze = semanticSource.indexOf('Freeze the taxonomy candidate');
+  const currentListDiff = semanticSource.indexOf('Read current Lists only');
+  assert.ok(assessments >= 0 && assessments < globalTaxonomy);
+  assert.ok(globalTaxonomy < candidateFreeze && candidateFreeze < currentListDiff);
+
+  assert.match(semanticSource, /validate-semantic-plan\.mjs/);
+  assert.match(semanticSource, /schema_version[^\n]*1\.3/i);
+  assert.match(semanticSource, /evidence_units[\s\S]*review_evidence[\s\S]*taxonomy[\s\S]*candidate[\s\S]*global_review/i);
+  assert.match(semanticSource, /collector owns/i);
+  assert.match(semanticSource, /repository_id/);
+  assert.match(semanticSource, /sources\/.*source_id.*\.bin/i);
+  assert.match(semanticSource, /status:"available".*source_id/i);
+  assert.match(semanticSource, /status:"missing".*http_status:404/i);
+  assert.match(semanticSource, /status:"delivered".*execution_id/i);
+  assert.match(semanticSource, /retention_signals[\s\S]*evidence-only/i);
+  assert.match(semanticSource, /assessment author must not make `not-queued`, `likely-unstar`, or\s+`unresolved` decisions/i);
+  assert.match(semanticSource, /collection-wide retention decision per repository/i);
+  assert.match(semanticSource, /not-queued.*likely-unstar.*unresolved/i);
+  assert.match(semanticSource, /Classification and retention are independent decisions/i);
+  assert.match(semanticSource, /Zero browse intents[\s\S]*does not imply `unresolved` retention/i);
+  assert.match(semanticSource, /no supported browsing outcome[\s\S]*`likely-unstar`/i);
+  assert.match(semanticSource, /unresolved[\s\S]*may still be classified/i);
+  assert.match(semanticSource, /runner-owned/i);
+  assert.match(semanticSource, /runner_id[\s\S]*author_id[\s\S]*must\s+differ/i);
+  assert.match(semanticSource, /collection-receipt\.json/);
+  assert.match(semanticSource, /execution-receipts\.json/);
+  assert.match(semanticSource, /collection_receipt_sha256/);
+  assert.match(semanticSource, /semantic_plan_sha256/);
+  assert.match(semanticSource, /started_at.*completed_at.*exit_status/i);
+  assert.match(semanticSource, /Offline validation does not prove/i);
+  assert.match(semanticSource, /before\s+`validate-analysis\.mjs`/);
+  assert.match(semanticSource, /fresh global review/i);
+  assert.match(semanticSource, /source[\s\S]*assessment[\s\S]*taxonomy[\s\S]*hash/i);
+  assert.match(semanticSource, /provider,\s+model, or batch size/i);
+  assert.match(semanticSource, /Do not create per-repository\s+judges/i);
+  assert.match(semanticSource, /majority voting,? or repeated repair\s+loops/i);
+  assert.match(semanticSource, /model-visible input/i);
+  assert.match(semanticSource, /Merely giving an\s+agent a file path[\s\S]*is not delivery/i);
+  assert.match(semanticSource, /Stage-local context boundary/i);
+  assert.match(semanticSource, /only participant that reads and executes\s+validator code/i);
+  assert.match(semanticSource, /Delivery chunks and semantic evidence units serve different purposes/i);
+  assert.match(semanticSource, /evidence-unit boundaries need\s+not match delivery chunks/i);
+  assert.match(semanticSource, /evidence_unit_ids/i);
+  assert.match(semanticSource, /never calculates byte\s+offsets or hashes/i);
+  assert.match(semanticSource, /taxonomy helper[\s\S]*does not\s+receive raw sources, chunks, deliveries, evidence packets, receipts, current\s+Lists, or validator code/i);
+  assert.match(semanticSource, /review_evidence = \{items:\[\{/i);
+  assert.match(semanticSource, /content_encoding:"utf-8"\|"base64", content/i);
+  assert.match(semanticSource, /Valid UTF-8 must remain readable tagged text; base64 is allowed\s+only for invalid UTF-8 bytes/i);
+  assert.match(semanticSource, /global-review helper[\s\S]*does not receive\s+uncited\s+raw source bodies, chunk\/delivery ledgers, execution receipts, current\s+Lists,\s+or validator code/i);
+  assert.match(semanticSource, /`failed` is an honest, valid review-draft result/i);
+  assert.match(semanticSource, /only when all seven dimensions pass[\s\S]*retains the failed draft and\s+stops/i);
+  assert.match(semanticSource, /exact context packet/i);
+  assert.match(semanticSource, /Preserve these limitations in downstream explain\/build\/verify receipts/i);
+  for (const dimension of ['coverage', 'evidence-integrity', 'semantic-fidelity', 'taxonomy-clarity', 'overlap-completeness', 'retention-judgment', 'projection-integrity']) {
+    assert.match(semanticSource, new RegExp(`\\b${dimension}\\b`));
+  }
 });
 
 test('public quickstart installs the complete bundle and keeps previews private', () => {
@@ -164,7 +283,7 @@ test('public quickstart installs the complete bundle and keeps previews private'
   assert.doesNotMatch(readmeSource, /python3 -m http\.server 8766/);
   assert.match(readmeSource, /`critical-partial`/);
   assert.match(readmeSource, /\[Security Policy\]\(SECURITY\.md\)/);
-  for (const path of ['stars-analysis.json', 'stars-rebuild-recovery.json', 'stars-site/', 'site-verification.json', 'browser-evidence.json']) {
+  for (const path of ['stars-analysis.json', 'semantic-plan.json', 'semantic-validation.json', 'collection-receipt.json', 'execution-receipts.json', 'cross-variant-adjudication-draft.json', 'cross-variant-adjudication-runner-receipt.json', 'stars-rebuild-recovery.json', 'stars-lists-diff.json', 'stars-current-pre-write-state.json', 'application-preflight-validation.json', 'stars-final-state.json', 'application-receipt.json', 'application-validation.json', 'stars-site/', 'site-verification.json', 'browser-evidence.json']) {
     assert.ok(gitignoreSource.includes(`**/${path}`), `${path} must be ignored at any worktree depth`);
   }
 });
@@ -191,9 +310,10 @@ test('Pages publishes only the fixed validated synthetic demo with least-privile
   assert.doesNotMatch(pagesWorkflowSource, /workflow_call:|pull_request:|\$\{\{\s*inputs\./);
   assert.match(pagesWorkflowSource, /DEMO_ANALYSIS: docs\/demo\/synthetic-analysis\.json/);
   assert.doesNotMatch(pagesWorkflowSource, /DEMO_(?:SITE|RECEIPT):\s*\$\{\{\s*runner\.temp/);
-  assert.match(pagesWorkflowSource, /validate-analysis\.mjs "\$DEMO_ANALYSIS"/);
-  assert.match(pagesWorkflowSource, /build-site\.mjs[\s\S]*--input "\$DEMO_ANALYSIS"[\s\S]*--output "\$RUNNER_TEMP\/stars-site"/);
-  assert.match(pagesWorkflowSource, /verify-site\.mjs[\s\S]*--input "\$DEMO_ANALYSIS"[\s\S]*--site "\$RUNNER_TEMP\/stars-site"/);
+  assert.match(pagesWorkflowSource, /materialize-semantic-run\.mjs "\$RUNNER_TEMP\/demo-semantic-run"/);
+  assert.match(pagesWorkflowSource, /validate-analysis\.mjs[\s\S]*?"\$DEMO_ANALYSIS"[\s\S]*?--semantic-run "\$RUNNER_TEMP\/demo-semantic-run"/);
+  assert.match(pagesWorkflowSource, /build-site\.mjs[\s\S]*--input "\$DEMO_ANALYSIS"[\s\S]*--semantic-run "\$RUNNER_TEMP\/demo-semantic-run"[\s\S]*--output "\$RUNNER_TEMP\/stars-site"/);
+  assert.match(pagesWorkflowSource, /verify-site\.mjs[\s\S]*--input "\$DEMO_ANALYSIS"[\s\S]*--semantic-run "\$RUNNER_TEMP\/demo-semantic-run"[\s\S]*--site "\$RUNNER_TEMP\/stars-site"/);
   assert.match(pagesWorkflowSource, /build:[\s\S]*permissions:\s*\n\s+contents: read/);
   assert.match(pagesWorkflowSource, /deploy:[\s\S]*permissions:\s*\n\s+pages: write\s*\n\s+id-token: write/);
   assert.match(pagesWorkflowSource, /if: github\.ref == 'refs\/heads\/main'/);

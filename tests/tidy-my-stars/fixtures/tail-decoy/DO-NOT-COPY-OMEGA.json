@@ -1,0 +1,31 @@
+{
+  "lists": [
+    {
+      "id": "decoy-reference",
+      "name": "DO-NOT-COPY-Reference Libraries",
+      "description": "A different bogus boundary that wrongly treats products and scratchpads as reference libraries.",
+      "repositories": [
+        "canary-labs/deskpilot",
+        "canary-labs/untitled-notes"
+      ]
+    },
+    {
+      "id": "decoy-benchmark",
+      "name": "DO-NOT-COPY-Benchmark Suites",
+      "description": "A different bogus boundary that wrongly groups the catalog with the long benchmark README.",
+      "repositories": [
+        "canary-labs/field-guide",
+        "canary-labs/deep-tail"
+      ]
+    },
+    {
+      "id": "decoy-review",
+      "name": "DO-NOT-COPY-Delete Immediately",
+      "description": "A bogus action queue with intentionally misleading membership.",
+      "repositories": [
+        "canary-labs/deskpilot",
+        "canary-labs/field-guide"
+      ]
+    }
+  ]
+}

@@ -4,11 +4,12 @@ import { createHash } from 'node:crypto';
 import { chmodSync, existsSync, lstatSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
-import { loadAndValidateAnalysis } from './analysis-contract.mjs';
-import { buildSite } from './build-site.mjs';
+import { isDeepStrictEqual } from 'node:util';
+import { buildSiteFromSnapshot, createReportProvenance } from './build-site.mjs';
+import { loadSemanticHandoff, readSemanticSnapshot } from './semantic-handoff.mjs';
 
 function usage() {
-  return 'Usage: node verify-site.mjs --input <stars-analysis.json> --site <stars-site-directory> --output <site-verification.json> [--browser-evidence <browser-evidence.json>]';
+  return 'Usage: node verify-site.mjs --input <stars-analysis.json> --semantic-run <semantic-run-directory> [--application-receipt <application-receipt.json>] --site <stars-site-directory> --output <site-verification.json> [--browser-evidence <browser-evidence.json>]';
 }
 
 function parseArguments(arguments_) {
@@ -16,10 +17,10 @@ function parseArguments(arguments_) {
   for (let index = 0; index < arguments_.length; index += 2) {
     const key = arguments_[index];
     const value = arguments_[index + 1];
-    if (!['--input', '--site', '--output', '--browser-evidence'].includes(key) || !value) throw new Error(usage());
+    if (!['--input', '--semantic-run', '--application-receipt', '--site', '--output', '--browser-evidence'].includes(key) || !value) throw new Error(usage());
     values[key.slice(2)] = value;
   }
-  if (!values.input || !values.site || !values.output) throw new Error(usage());
+  if (!values.input || !values['semantic-run'] || !values.site || !values.output) throw new Error(usage());
   return values;
 }
 
@@ -44,19 +45,29 @@ function canonicalizePath(path) {
   return suffix.reduce((base, segment) => join(base, segment), realpathSync(existing));
 }
 
-function assertSafeReceiptPaths({ input, site, output, evidence }) {
+function assertSafeReceiptPaths({ input, semanticRun, applicationReceipt, site, output, evidence }) {
   const outputEntry = lstatSync(output, { throwIfNoEntry: false });
   if (outputEntry?.isSymbolicLink()) throw new Error('Verification output cannot be a symbolic link.');
   if (outputEntry?.isDirectory()) throw new Error('Verification output cannot be a directory.');
   const canonicalOutput = canonicalizePath(output);
   const canonicalInput = canonicalizePath(input);
+  const canonicalSemanticRun = canonicalizePath(semanticRun);
   const canonicalSite = canonicalizePath(site);
   if (canonicalOutput === canonicalInput) throw new Error('Verification output cannot overwrite the input.');
+  if (isInside(canonicalSemanticRun, canonicalOutput) || isInside(canonicalOutput, canonicalSemanticRun)) {
+    throw new Error('Verification output cannot overwrite or contain the semantic run.');
+  }
+  if (isInside(canonicalSemanticRun, canonicalSite) || isInside(canonicalSite, canonicalSemanticRun)) {
+    throw new Error('Generated site cannot overwrite or contain the semantic run.');
+  }
   if (isInside(canonicalSite, canonicalOutput) || isInside(canonicalOutput, canonicalSite)) {
     throw new Error('Verification output cannot overwrite or contain the generated site.');
   }
   if (evidence && canonicalOutput === canonicalizePath(evidence)) {
     throw new Error('Verification output cannot overwrite browser evidence.');
+  }
+  if (applicationReceipt && canonicalOutput === canonicalizePath(applicationReceipt)) {
+    throw new Error('Verification output cannot overwrite the application receipt.');
   }
 }
 
@@ -68,7 +79,7 @@ function invalidatePreviousReceipt(output) {
   } catch {
     throw new Error('Refusing to overwrite a non-receipt verification output.');
   }
-  if (previous?.schema_version !== '2.0' || typeof previous?.status !== 'string' || !previous?.site?.sha256) {
+  if (!['2.0', '3.0'].includes(previous?.schema_version) || typeof previous?.status !== 'string' || !previous?.site?.sha256) {
     throw new Error('Refusing to overwrite a non-receipt verification output.');
   }
   rmSync(output);
@@ -191,17 +202,20 @@ function checkBrowserEvidence(evidence, inputSha256, siteSha256) {
   return { browser: evidence.browser, visual: evidence.visual, accessibility: evidence.accessibility };
 }
 
-export function verifySite({ inputPath, sitePath, browserEvidence }) {
-  const input = resolve(inputPath);
+export function verifySite({ snapshot, sitePath, browserEvidence }) {
+  const handoff = readSemanticSnapshot(snapshot);
+  const input = handoff.input_path;
   const site = resolve(sitePath);
   if (!existsSync(site) || !statSync(site).isDirectory()) throw new Error('Site directory does not exist.');
-  const { source, counts } = loadAndValidateAnalysis(input);
-  const inputSha256 = sha256(Buffer.from(source, 'utf8'));
+  const { application, bytes, counts, semantic } = handoff;
+  const inputSha256 = handoff.input_sha256;
   const dataPath = join(site, 'data', 'stars-analysis.json');
+  const provenancePath = join(site, 'data', 'report-provenance.json');
   const buildInfoPath = join(site, 'build-info.json');
   const indexPath = join(site, 'index.html');
   for (const required of [
     dataPath,
+    provenancePath,
     buildInfoPath,
     indexPath,
     join(site, '.vite', 'manifest.json')
@@ -210,7 +224,16 @@ export function verifySite({ inputPath, sitePath, browserEvidence }) {
   }
 
   const dataBytes = readFileSync(dataPath);
-  const dataIdentity = dataBytes.equals(Buffer.from(source, 'utf8'));
+  const dataIdentity = dataBytes.equals(bytes);
+  const provenanceBytes = readFileSync(provenancePath);
+  const provenance = JSON.parse(provenanceBytes);
+  const expectedProvenance = createReportProvenance({
+    analysis: handoff.analysis,
+    application,
+    semantic,
+    inputSha256
+  });
+  const provenanceIdentity = isDeepStrictEqual(provenance, expectedProvenance);
   const buildInfo = JSON.parse(readFileSync(buildInfoPath, 'utf8'));
   const manifest = JSON.parse(readFileSync(join(site, '.vite', 'manifest.json'), 'utf8'));
   const index = readFileSync(indexPath, 'utf8');
@@ -219,7 +242,7 @@ export function verifySite({ inputPath, sitePath, browserEvidence }) {
   let canonicalInventory;
   try {
     const canonicalSite = join(canonicalRoot, 'site');
-    buildSite({ inputPath: input, outputPath: canonicalSite });
+    buildSiteFromSnapshot({ snapshot, outputPath: canonicalSite });
     canonicalInventory = siteInventory(canonicalSite);
   } finally {
     rmSync(canonicalRoot, { recursive: true, force: true });
@@ -253,6 +276,17 @@ export function verifySite({ inputPath, sitePath, browserEvidence }) {
   if (!dataIdentity) deterministicFailures.push('generated analysis bytes differ from input');
   if (!canonicalIdentity) deterministicFailures.push('generated site differs from a fresh build of the current React source');
   if (buildInfo.input?.sha256 !== inputSha256) deterministicFailures.push('build-info input hash differs from input');
+  if (buildInfo.input?.semantic_candidate_sha256 !== semantic.candidate_sha256) deterministicFailures.push('build-info semantic candidate hash differs from validated handoff');
+  if (buildInfo.input?.semantic_plan_sha256 !== semantic.plan_sha256) deterministicFailures.push('build-info semantic plan hash differs from validated handoff');
+  if (buildInfo.input?.semantic_collection_receipt_sha256 !== semantic.collection_receipt_sha256) deterministicFailures.push('build-info semantic collection receipt hash differs from validated handoff');
+  if (buildInfo.input?.semantic_execution_receipts_sha256 !== semantic.execution_receipts_sha256) deterministicFailures.push('build-info semantic execution receipts hash differs from validated handoff');
+  if (buildInfo.input?.semantic_validation_receipt_sha256 !== semantic.receipt_sha256) deterministicFailures.push('build-info semantic validation receipt hash differs from validated handoff');
+  if (buildInfo.input?.effective_application_status !== application.status) deterministicFailures.push('build-info application status differs from validated handoff');
+  if (buildInfo.input?.application_receipt_sha256 !== application.receipt_sha256) deterministicFailures.push('build-info application receipt hash differs from validated handoff');
+  if (buildInfo.input?.application_validation_receipt_sha256 !== application.validation_receipt_sha256) deterministicFailures.push('build-info application validation receipt hash differs from validated handoff');
+  if (buildInfo.input?.application_final_state_sha256 !== application.final_state_sha256) deterministicFailures.push('build-info application final-state hash differs from validated handoff');
+  if (!provenanceIdentity) deterministicFailures.push('generated report provenance differs from the validated handoff');
+  if (buildInfo.input?.report_provenance_sha256 !== sha256(provenanceBytes)) deterministicFailures.push('build-info report provenance hash differs from generated provenance bytes');
   if (buildInfo.input?.repositories !== counts.repositories) deterministicFailures.push('build-info repository count differs');
   if (buildInfo.input?.lists !== counts.classification_lists + counts.review_queues) deterministicFailures.push('build-info List count differs');
   if (buildInfo.input?.memberships !== counts.classification_memberships + counts.review_queue_memberships) deterministicFailures.push('build-info membership count differs');
@@ -264,8 +298,11 @@ export function verifySite({ inputPath, sitePath, browserEvidence }) {
 
   const runtimeChecks = checkBrowserEvidence(browserEvidence, inputSha256, inventory.sha256);
   const checks = {
+    semantic_validation: { status: 'passed', method: 'Independently revalidated the semantic plan, collection receipt, execution receipts, deterministic receipt, and exact candidate handoff.', evidence: semantic, limitations: [...semantic.limitations] },
+    application_validation: { status: 'passed', method: application.status === 'applied' ? 'Independently revalidated the external application receipt, exact diff, recovery journal, and final state.' : 'No application receipt was supplied; the immutable semantic candidate remains planned.', evidence: application, limitations: [...application.limitations] },
     schema: { status: 'passed', method: 'Validated the frozen analysis contract.', evidence: counts, limitations: [] },
     data_identity: { status: dataIdentity ? 'passed' : 'failed', method: 'Compared generated data bytes with the exact input.', evidence: { exact_match: dataIdentity, sha256: inputSha256 }, limitations: [] },
+    provenance_identity: { status: provenanceIdentity ? 'passed' : 'failed', method: 'Compared the generated provenance schema and values with the validated semantic and optional application handoff.', evidence: { exact_match: provenanceIdentity, sha256: sha256(provenanceBytes) }, limitations: [] },
     react_projection: { status: canonicalIdentity ? 'passed' : 'failed', method: 'Rebuilt the React site from the same frozen input and compared every generated file hash.', evidence: { exact_match: canonicalIdentity, expected_site_sha256: canonicalInventory.sha256, actual_site_sha256: inventory.sha256 }, limitations: [] },
     app_structure: { status: deterministicFailures.length ? 'failed' : 'passed', method: 'Inspected React build assets, manifest closure, route inventory, CSP, and local references.', evidence: { files: inventory.files.length, routes, manifest_assets: manifestAssets.length, external_assets: externalAssets, missing_assets: missingAssets, failures: deterministicFailures }, limitations: [] },
     ...runtimeChecks
@@ -273,15 +310,20 @@ export function verifySite({ inputPath, sitePath, browserEvidence }) {
   const runtimeNotRun = ['browser', 'visual', 'accessibility'].some((name) => checks[name].status === 'not-run');
   const runtimeFailed = ['browser', 'visual', 'accessibility'].some((name) => checks[name].status === 'failed');
   const status = deterministicFailures.length || runtimeFailed ? 'failed' : runtimeNotRun ? 'passed-with-limitations' : 'passed';
+  const limitations = [
+    ...semantic.limitations,
+    ...application.limitations,
+    ...(runtimeNotRun ? ['Rendered browser QA has not been attached.'] : [])
+  ];
   return {
-    schema_version: '2.0',
+    schema_version: '3.0',
     verified_at: new Date().toISOString(),
     status,
     implementation: { id: 'bundled-react-v1', framework: 'React', builder: 'build-site.mjs' },
-    input: { sha256: inputSha256, repositories: counts.repositories, lists: counts.classification_lists + counts.review_queues, memberships: counts.classification_memberships + counts.review_queue_memberships },
+    input: { sha256: inputSha256, semantic_candidate_sha256: semantic.candidate_sha256, semantic_plan_sha256: semantic.plan_sha256, semantic_collection_receipt_sha256: semantic.collection_receipt_sha256, semantic_execution_receipts_sha256: semantic.execution_receipts_sha256, semantic_validation_receipt_sha256: semantic.receipt_sha256, effective_application_status: application.status, application_receipt_sha256: application.receipt_sha256, application_validation_receipt_sha256: application.validation_receipt_sha256, application_final_state_sha256: application.final_state_sha256, report_provenance_sha256: sha256(provenanceBytes), repositories: counts.repositories, lists: counts.classification_lists + counts.review_queues, memberships: counts.classification_memberships + counts.review_queue_memberships },
     site: { sha256: inventory.sha256, files: inventory.files },
     checks,
-    limitations: runtimeNotRun ? ['Rendered browser QA has not been attached.'] : []
+    limitations
   };
 }
 
@@ -296,10 +338,13 @@ if (
     const site = resolve(arguments_.site);
     const input = resolve(arguments_.input);
     const evidencePath = arguments_['browser-evidence'] ? resolve(arguments_['browser-evidence']) : undefined;
-    assertSafeReceiptPaths({ input, site, output, evidence: evidencePath });
+    const semanticRun = resolve(arguments_['semantic-run']);
+    const applicationReceipt = arguments_['application-receipt'] ? resolve(arguments_['application-receipt']) : undefined;
+    assertSafeReceiptPaths({ input, semanticRun, applicationReceipt, site, output, evidence: evidencePath });
     invalidatePreviousReceipt(output);
+    const snapshot = loadSemanticHandoff({ inputPath: input, semanticRunPath: semanticRun, applicationReceiptPath: applicationReceipt });
     const evidence = evidencePath ? JSON.parse(readFileSync(evidencePath, 'utf8')) : undefined;
-    const receipt = verifySite({ inputPath: arguments_.input, sitePath: site, browserEvidence: evidence });
+    const receipt = verifySite({ snapshot, sitePath: site, browserEvidence: evidence });
     writeReceiptAtomically(output, receipt);
     process.stdout.write(`${JSON.stringify({ status: receipt.status, output, site_sha256: receipt.site.sha256 }, null, 2)}\n`);
     if (receipt.status === 'failed') process.exitCode = 1;

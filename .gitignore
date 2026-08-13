@@ -6,7 +6,19 @@ dist/
 
 # Real user data and generated report artifacts
 **/stars-analysis.json
+**/semantic-plan.json
+**/semantic-validation.json
+**/collection-receipt.json
+**/execution-receipts.json
+**/cross-variant-adjudication-draft.json
+**/cross-variant-adjudication-runner-receipt.json
 **/stars-rebuild-recovery.json
+**/stars-lists-diff.json
+**/stars-final-state.json
+**/application-receipt.json
+**/application-validation.json
+**/stars-current-pre-write-state.json
+**/application-preflight-validation.json
 **/stars-site/
 **/site-verification.json
 **/browser-evidence.json

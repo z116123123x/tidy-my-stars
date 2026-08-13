@@ -42,6 +42,32 @@ export interface StarsAnalysis {
   };
 }
 
+export interface ReportProvenance {
+  readonly schema_version: '1.0';
+  readonly source: {
+    readonly account_login: string;
+    readonly generated_at: string;
+    readonly stars_analysis_bytes_sha256: string;
+  };
+  readonly semantic: {
+    readonly validation_status: 'passed';
+    readonly candidate_sha256: string;
+    readonly plan_sha256: string;
+    readonly collection_receipt_sha256: string;
+    readonly execution_receipts_sha256: string;
+    readonly validation_receipt_sha256: string;
+    readonly limitations: readonly string[];
+  };
+  readonly application: {
+    readonly status: 'planned' | 'applied';
+    readonly claim_basis: 'no-application-receipt' | 'validated-external-receipt';
+    readonly receipt_sha256: string | null;
+    readonly validation_receipt_sha256: string | null;
+    readonly final_state_sha256: string | null;
+    readonly limitations: readonly string[];
+  };
+}
+
 export interface SearchDocument {
   kind: 'repository' | 'list';
   id: string;
@@ -54,6 +80,7 @@ export interface SearchDocument {
 
 export interface ReportModel {
   analysis: StarsAnalysis;
+  provenance: ReportProvenance;
   listsById: Map<string, StarsList>;
   repositoriesByName: Map<string, Repository>;
   repositoriesByList: Map<string, Repository[]>;

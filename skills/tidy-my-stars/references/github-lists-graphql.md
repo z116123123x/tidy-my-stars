@@ -19,14 +19,20 @@ Read and paginate:
 - every List's items; and
 - the user's complete Stars inventory.
 
-Keep repository node IDs, List IDs, names, descriptions, and memberships in
-the read-only plan. Re-read this state immediately before an authorized write.
+The live interface may retain repository node IDs operationally while issuing
+GraphQL requests. Canonical private artifacts use the exact documented shapes:
+the pre-write recovery snapshot stores repository `full_name` values plus List
+IDs, names, descriptions, and memberships; the desired projection lives in
+`stars-lists-diff.json`, not as a second recovery snapshot. Re-read the complete
+canonical pre-write state immediately before an authorized write.
 
 ## Full rebuild
 
-Before mutation, persist and validate the complete pre-write and desired states
-plus an operation journal as required by the skill's recovery contract. Then,
-after authorization, apply the frozen plan in order:
+Before mutation, persist the complete pre-write recovery state, frozen desired
+diff, and empty prepared journal required by the recovery contract. Run the
+application preflight against a fresh complete reread and accept only its
+passing `application-preflight-validation.json`. Then, after authorization,
+apply the frozen plan in order:
 
 1. Delete every current List and verify that no old List remains.
 2. Create every new List and record its new ID.
@@ -39,3 +45,9 @@ deletion, re-read the remote state and use the journal to finish the desired
 rebuild or recreate the complete pre-write semantic state. If neither is
 currently possible, preserve the artifact and report the exact critical partial
 state rather than claiming success.
+
+A completed applied handoff requires all seven private artifacts:
+`stars-lists-diff.json`, finalized `stars-rebuild-recovery.json`,
+`stars-current-pre-write-state.json`, `application-preflight-validation.json`,
+`stars-final-state.json`, `application-receipt.json`, and
+`application-validation.json`. Never infer or omit one from API responses.

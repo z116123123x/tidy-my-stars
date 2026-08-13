@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-12T00:00:00Z",
+  "locale": "en",
+  "account": {
+    "login": "example-user",
+    "star_count": 1
+  },
+  "run": {
+    "likely_unstar_sensitivity": 5,
+    "analysis_status": "complete",
+    "application_status": "planned"
+  },
+  "lists": [
+    {
+      "id": "existing-list",
+      "name": "Existing List",
+      "kind": "classification",
+      "description": "A copied pre-existing List."
+    },
+    {
+      "id": "likely-unstar",
+      "name": "Likely Unstar",
+      "kind": "review-queue",
+      "description": "Repositories suggested for human review."
+    }
+  ],
+  "repositories": [
+    {
+      "full_name": "example/shortcut",
+      "url": "https://github.com/example/shortcut",
+      "description": null,
+      "memberships": [
+        {
+          "list_id": "existing-list",
+          "reason": "example/shortcut belongs in Existing List because its complete README demonstrates A copied pre-existing List."
+        }
+      ]
+    }
+  ],
+  "validation": {
+    "coverage_status": "complete",
+    "semantic_review": "passed",
+    "notes": [
+      "Taxonomy was frozen only after collection-wide review."
+    ]
+  }
+}

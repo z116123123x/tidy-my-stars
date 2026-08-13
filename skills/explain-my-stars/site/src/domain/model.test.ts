@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { buildReportModel, createSearchDocuments, listRoute, literalSearchRank, repositoryRoute, reviewRoute } from './model';
-import { fixture } from '../test/fixture';
+import { fixture, provenanceFixture } from '../test/fixture';
 
 describe('report model', () => {
   it('derives exact overlapping and review counts without changing analysis', () => {
-    const model = buildReportModel(fixture);
+    const model = buildReportModel(fixture, provenanceFixture);
     expect(model.classificationLists).toHaveLength(2);
     expect(model.reviewRepositories.map((repository) => repository.full_name)).toEqual(['acme/old-agent']);
     expect(model.classificationMembershipCount).toBe(3);
@@ -14,7 +14,7 @@ describe('report model', () => {
   });
 
   it('indexes names, Lists, descriptions, and exact reasons', () => {
-    const model = buildReportModel(fixture);
+    const model = buildReportModel(fixture, provenanceFixture);
     const documents = createSearchDocuments(model);
     const repository = documents.find((document) => document.id === 'acme/agent-studio');
     expect(repository?.searchable).toContain('visual agent workflow studio');
@@ -25,7 +25,7 @@ describe('report model', () => {
   });
 
   it('creates stable deep-link routes', () => {
-    const model = buildReportModel(fixture);
+    const model = buildReportModel(fixture, provenanceFixture);
     const repository = model.repositoriesByName.get('acme/agent-studio')!;
     expect(repositoryRoute(repository)).toBe('/repositories/acme/agent-studio');
     expect(reviewRoute(repository)).toBe('/review/acme/agent-studio');
@@ -34,7 +34,7 @@ describe('report model', () => {
   });
 
   it('ranks an exact List title ahead of many repositories that merely belong to it', () => {
-    const model = buildReportModel(fixture);
+    const model = buildReportModel(fixture, provenanceFixture);
     const documents = createSearchDocuments(model);
     for (const listId of ['agents', 'likely-unstar']) {
       const listDocument = documents.find((document) => document.kind === 'list' && document.id === listId)!;

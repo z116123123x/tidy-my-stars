@@ -11,8 +11,8 @@ import type { Repository } from '../types';
 type ReviewDecision = 'keep' | 'later' | 'consider-unstar';
 type ReviewDecisions = Record<string, ReviewDecision>;
 
-export function reviewDecisionStorageKey(account: string, generatedAt: string): string {
-  return `explain-my-stars:review-decisions:${encodeURIComponent(account)}:${encodeURIComponent(generatedAt)}`;
+export function reviewDecisionStorageKey(account: string, generatedAt: string, candidateSha256: string): string {
+  return `explain-my-stars:review-decisions:${encodeURIComponent(account)}:${encodeURIComponent(generatedAt)}:${candidateSha256}`;
 }
 
 export function persistReviewDecisions(storageKey: string, decisions: ReviewDecisions): boolean {
@@ -85,8 +85,8 @@ export function sensitivityExplanation(level: number, locale: string): string {
   return `1 is narrow and 10 is broad. ${rule}; it is not a quality score or a target removal count.`;
 }
 
-function useReviewDecisions(account: string, generatedAt: string) {
-  const storageKey = reviewDecisionStorageKey(account, generatedAt);
+function useReviewDecisions(account: string, generatedAt: string, candidateSha256: string) {
+  const storageKey = reviewDecisionStorageKey(account, generatedAt, candidateSha256);
   const [{ decisions, storageError }, setReviewState] = useState<{
     decisions: ReviewDecisions;
     storageError: boolean;
@@ -137,7 +137,11 @@ export function ReviewQueuePage() {
   const { model } = useReport();
   const t = (english: string, traditionalChinese: string) => uiText(model.analysis.locale, english, traditionalChinese);
   const [params, setParams] = useSearchParams();
-  const { decisions, storageError } = useReviewDecisions(model.analysis.account.login, model.analysis.generated_at);
+  const { decisions, storageError } = useReviewDecisions(
+    model.analysis.account.login,
+    model.analysis.generated_at,
+    model.provenance.semantic.candidate_sha256
+  );
   const query = params.get('q') ?? '';
   const listId = params.get('list') ?? '';
   const repositories = useMemo(
@@ -178,7 +182,11 @@ export function ReviewDetailPage() {
   const t = (english: string, traditionalChinese: string) => uiText(model.analysis.locale, english, traditionalChinese);
   const { owner = '', name = '' } = useParams();
   const repository = model.repositoriesByName.get(`${owner}/${name}`);
-  const { decisions, decide, clear, storageError } = useReviewDecisions(model.analysis.account.login, model.analysis.generated_at);
+  const { decisions, decide, clear, storageError } = useReviewDecisions(
+    model.analysis.account.login,
+    model.analysis.generated_at,
+    model.provenance.semantic.candidate_sha256
+  );
   if (!repository || !model.reviewRepositories.some((candidate) => candidate.full_name === repository.full_name)) {
     return <div className="page"><PageHeader eyebrow={t('Review', '複核')} title={t('Suggestion not found', '找不到此建議')} description={t('This repository is not in the current Likely Unstar queue.', '這個 repository 不在目前的建議 Unstar 佇列中。')} /><Link className="button button--primary" to="/review">{t('Return to queue', '返回佇列')}</Link></div>;
   }

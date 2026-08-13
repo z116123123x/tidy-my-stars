@@ -1,0 +1,22 @@
+{
+  "lists": [
+    {
+      "id": "decoy-agent",
+      "name": "DO-NOT-COPY-Agent Resources",
+      "description": "A bogus current boundary intended to bias the new taxonomy.",
+      "repositories": [
+        "canary-labs/deskpilot",
+        "canary-labs/deep-tail"
+      ]
+    },
+    {
+      "id": "decoy-misc",
+      "name": "DO-NOT-COPY-Misc",
+      "description": "A bogus catch-all that must never become a semantic input.",
+      "repositories": [
+        "canary-labs/field-guide",
+        "canary-labs/untitled-notes"
+      ]
+    }
+  ]
+}

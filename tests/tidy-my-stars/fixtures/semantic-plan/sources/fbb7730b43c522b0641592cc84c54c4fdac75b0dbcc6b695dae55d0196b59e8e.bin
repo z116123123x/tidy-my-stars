@@ -1,0 +1,7 @@
+# Atlas Forge
+
+Atlas Forge turns natural-language briefs into reusable agent workflows.
+It also exports editable CAD models for downstream design tools.
+
+The command API can be installed as an independent capability in other agents.
+This repository is archived; its maintained successor is Example/Atlas-Next.

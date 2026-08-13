@@ -50,9 +50,9 @@ export function OverviewPage() {
         </div>
         <dl className="overview-ledger" aria-label={t('Collection summary', '收藏摘要')}>
           <div><dt>Repositories</dt><dd>{model.analysis.repositories.length}</dd></div>
-          <div><dt>Lists</dt><dd>{model.analysis.lists.length}</dd><small>{t(`${model.classificationLists.length} topics + 1 review queue`, `${model.classificationLists.length} 個主題 + 1 個審閱佇列`)}</small></div>
-          <div><dt>{t('Relationships', '歸屬關係')}</dt><dd>{model.classificationMembershipCount + model.reviewMembershipCount}</dd><small>{t(`${model.overlapRepositoryCount} repos cross Lists`, `${model.overlapRepositoryCount} 個 repos 跨多個 Lists`)}</small></div>
-          <div className="overview-ledger__review"><dt>{model.reviewList.name}</dt><dd>{model.reviewRepositories.length}</dd><small>{t('Review only; nothing is automatically unstarred', '只列入複核，不會自動取消收藏')}</small></div>
+          <div><dt>Lists</dt><dd>{model.analysis.lists.length}<small>{t(`${model.classificationLists.length} topics + 1 review queue`, `${model.classificationLists.length} 個主題 + 1 個審閱佇列`)}</small></dd></div>
+          <div><dt>{t('Relationships', '歸屬關係')}</dt><dd>{model.classificationMembershipCount + model.reviewMembershipCount}<small>{t(`${model.overlapRepositoryCount} repos cross Lists`, `${model.overlapRepositoryCount} 個 repos 跨多個 Lists`)}</small></dd></div>
+          <div className="overview-ledger__review"><dt>{model.reviewList.name}</dt><dd>{model.reviewRepositories.length}<small>{t('Review only; nothing is automatically unstarred', '只列入複核，不會自動取消收藏')}</small></dd></div>
         </dl>
       </section>
 

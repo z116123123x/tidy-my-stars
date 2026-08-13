@@ -30,9 +30,10 @@ Tidy my stars
 ```
 
 This is a two-skill bundle. `tidy-my-stars` analyzes the complete collection
-and writes validated `stars-analysis.json`; it then automatically invokes
-`explain-my-stars` to build the searchable report from those exact bytes. One
-prompt runs both, and installing only one is incomplete.
+and writes a validated semantic run plus its exact planned
+`stars-analysis.json` candidate; it then automatically invokes
+`explain-my-stars` with both to build the searchable report. One prompt runs
+both, and installing only one is incomplete.
 
 ## Report preview
 
@@ -51,23 +52,30 @@ reasons, so keep them private unless separately reviewed for publication._
 
 ## What one run does
 
-1. Reads every current Star, List, membership, and complete default README.
+1. Reads every current Star and freezes complete source evidence, including the
+   default README through EOF. Current Lists and memberships remain hidden from
+   semantic authors at this stage.
 2. Investigates additional authoritative evidence only when a material question
    remains.
 3. Understands the whole collection before deriving up to 31 clear,
    overlapping classification Lists.
 4. Creates exactly one human-decision queue for AI `Likely Unstar`
    recommendations. It never unstars a repository.
-5. Produces one exact full-replacement plan. With explicit write authorization,
-   it first saves a private recovery journal, then deletes all current Lists,
+5. Freezes and independently reviews the candidate, then reads current Lists and
+   memberships only to calculate one exact full-replacement diff.
+6. Validates the complete semantic run and exact planned `stars-analysis.json`,
+   then invokes `explain-my-stars` with both artifacts.
+7. Applies only with explicit write authorization. It first saves a private
+   recovery journal, then deletes all current Lists,
    creates the new taxonomy, restores every membership, and verifies the result.
    Recovery is best effort rather than transactional: the journal supports
    resumption or semantic restoration, but an API, permission, schema, or
    connectivity failure can still leave a disclosed `critical-partial` state.
    Without authorization, GitHub stays unchanged.
-6. Regenerates and validates `stars-analysis.json`.
-7. Automatically invokes `explain-my-stars` and regenerates the report from
-   those exact bytes.
+   The semantic candidate remains immutable and planned. After a successful
+   verified apply, a separate deterministic application receipt binds the exact
+   diff, completed recovery journal, final GitHub-state snapshot, and unchanged
+   candidate. Without that receipt, the planned report is not apply proof.
 
 Every run analyzes the current collection again. It does not patch an old
 taxonomy or an old report.
@@ -87,9 +95,11 @@ are the complete default system an agent can execute. An alternative system
 must preserve the same data fidelity, information architecture, safety,
 accessibility, and verification outcomes.
 
-The stable boundary between both skills is `stars-analysis.json`; the report
-system never decides Lists, memberships, reasons, sensitivity, or queue
-eligibility.
+The stable boundary between both skills is the complete private semantic run
+plus the exact planned `stars-analysis.json` candidate. The report independently
+revalidates that binding and never decides Lists, memberships, reasons,
+sensitivity, or queue eligibility. Optional applied status is external
+receipt-backed presentation metadata; it never rewrites candidate bytes.
 
 ## Installation details
 
@@ -145,9 +155,22 @@ Likely Unstar sensitivity ranges from 1 (narrow) to 10 (broad) and defaults to
 
 The bundled React implementation outputs:
 
+- a private semantic run directory containing frozen sources,
+  `semantic-plan.json`, `collection-receipt.json`, `execution-receipts.json`,
+  and `semantic-validation.json`;
 - `stars-site/` — the locally bundled report;
-- `site-verification.json` — the receipt bound to the exact analysis and site;
+- `site-verification.json` — the receipt bound to the exact semantic handoff,
+  analysis, and site;
 - `stars-analysis.json` — the validated semantic source.
+
+After an authorized verified rebuild, the same private run additionally contains
+`stars-lists-diff.json`, finalized `stars-rebuild-recovery.json`,
+`stars-current-pre-write-state.json`, `application-preflight-validation.json`,
+`stars-final-state.json`, `application-receipt.json`, and the deterministic
+`application-validation.json`. All seven are required for an applied handoff;
+these files are private user data. The report can display their validated
+applied status while its copied `stars-analysis.json` remains byte-for-byte
+planned.
 
 Preview `stars-site/` over loopback-only HTTP rather than opening `index.html`
 directly. On macOS or Linux:
@@ -177,6 +200,9 @@ build or preview the report is not authorization to publish it.
   grant.
 - An authorized apply is a verified full List rebuild, not incremental patching.
 - A write-ahead recovery artifact exists before the first List deletion.
+- Applied status requires a separate deterministic receipt bound to the exact
+  planned candidate and freshly verified final state; a claimed authorization
+  field is not proof that authorization occurred.
 - Recovery reduces risk but cannot make GitHub's delete-first rebuild
   transactional; disclose and preserve any `critical-partial` state.
 - No workflow path automatically unstars a repository.
@@ -198,7 +224,7 @@ uvx --from skills-ref agentskills validate skills/explain-my-stars
 Run the deterministic Node tests:
 
 ```bash
-node --test tests/explain-my-stars/*.test.mjs
+node --test tests/explain-my-stars/*.test.mjs tests/tidy-my-stars/*.test.mjs
 ```
 
 Run the bundled React implementation tests:

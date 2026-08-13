@@ -7,6 +7,9 @@ on:
     paths:
       - .github/workflows/pages.yml
       - docs/demo/synthetic-analysis.json
+      - docs/demo/materialize-semantic-run.mjs
+      - tests/tidy-my-stars/**
+      - skills/tidy-my-stars/scripts/**
       - skills/explain-my-stars/scripts/**
       - skills/explain-my-stars/site/**
   workflow_dispatch:
@@ -39,8 +42,21 @@ jobs:
         run: npm ci
         working-directory: skills/explain-my-stars/site
 
-      - name: Validate the fixed synthetic analysis
-        run: node skills/explain-my-stars/scripts/validate-analysis.mjs "$DEMO_ANALYSIS"
+      - name: Install the locked browser runtime
+        run: npx playwright install --with-deps chromium
+        working-directory: skills/explain-my-stars/site
+
+      - name: Materialize the fixed synthetic semantic run
+        run: node docs/demo/materialize-semantic-run.mjs "$RUNNER_TEMP/demo-semantic-run"
+
+      - name: Validate the fixed synthetic handoff
+        run: >-
+          node skills/explain-my-stars/scripts/validate-analysis.mjs
+          "$DEMO_ANALYSIS"
+          --semantic-run "$RUNNER_TEMP/demo-semantic-run"
+
+      - name: Test semantic and report contracts
+        run: node --test tests/explain-my-stars/*.test.mjs tests/tidy-my-stars/*.test.mjs
 
       - name: Test the bundled report system
         run: npm test
@@ -54,23 +70,39 @@ jobs:
         run: >-
           node skills/explain-my-stars/scripts/build-site.mjs
           --input "$DEMO_ANALYSIS"
+          --semantic-run "$RUNNER_TEMP/demo-semantic-run"
           --output "$RUNNER_TEMP/stars-site"
+
+      - name: Inspect the exact rendered report
+        run: >-
+          npm run browser-qa --
+          --input "$GITHUB_WORKSPACE/$DEMO_ANALYSIS"
+          --site "$RUNNER_TEMP/stars-site"
+          --output "$RUNNER_TEMP/browser-evidence.json"
+          --artifacts "$RUNNER_TEMP/browser-qa"
+        working-directory: skills/explain-my-stars/site
 
       - name: Verify deterministic output and publication boundaries
         shell: bash
         run: |
           node skills/explain-my-stars/scripts/verify-site.mjs \
             --input "$DEMO_ANALYSIS" \
+            --semantic-run "$RUNNER_TEMP/demo-semantic-run" \
             --site "$RUNNER_TEMP/stars-site" \
-            --output "$RUNNER_TEMP/site-verification.json"
+            --output "$RUNNER_TEMP/site-verification.json" \
+            --browser-evidence "$RUNNER_TEMP/browser-evidence.json"
           test -z "$(find "$RUNNER_TEMP/stars-site" -type l -print -quit)"
           jq -e '
-            (.status == "passed" or .status == "passed-with-limitations") and
+            (.status == "passed") and
             ([
+              .checks.semantic_validation.status,
               .checks.schema.status,
               .checks.data_identity.status,
               .checks.react_projection.status,
-              .checks.app_structure.status
+              .checks.app_structure.status,
+              .checks.browser.status,
+              .checks.visual.status,
+              .checks.accessibility.status
             ] | all(. == "passed"))
           ' "$RUNNER_TEMP/site-verification.json"
 

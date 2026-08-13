@@ -65,7 +65,7 @@ export function SearchPalette({ open, onClose }: { open: boolean; onClose: () =>
   };
 
   return (
-    <Dialog.Root open={open} onOpenChange={(nextOpen) => { if (!nextOpen) onClose(); }}>
+    <Dialog.Root modal={false} open={open} onOpenChange={(nextOpen) => { if (!nextOpen) onClose(); }}>
       <Dialog.Portal>
         <Dialog.Overlay className="command-layer" />
         <Dialog.Content

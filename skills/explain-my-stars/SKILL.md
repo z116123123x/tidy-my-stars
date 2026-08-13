@@ -11,22 +11,28 @@ metadata:
 
 # Explain My Stars
 
-Turn one frozen Stars analysis into a clear, navigable report. Preserve every
-semantic decision. This skill presents classification; it never performs it.
+Turn one frozen Stars analysis into a clear, navigable report. Preserve every semantic decision. This skill presents classification; it never performs it.
 
 ## Start with the contract
 
 - Read [references/report-contract.md](references/report-contract.md).
-- Locate `stars-analysis.json`; prefer the user-named path, then the current
-  directory. If absent, invoke `tidy-my-stars` for a read-only analysis or ask
-  for an existing analysis. Never reconstruct classification from metadata.
-- Validate the handoff before building:
+- Locate `stars-analysis.json` and its private semantic run directory containing
+  `semantic-plan.json`, `collection-receipt.json`, `execution-receipts.json`,
+  `semantic-validation.json`, and frozen sources. Prefer user-named paths, then
+  the current directory. If either is absent, invoke `tidy-my-stars` for a
+  read-only analysis or ask for the complete existing handoff. Never reconstruct
+  classification from metadata or accept an analysis without its bound evidence.
+- When the caller supplies `application-receipt.json`, require the complete sibling applied handoff: `stars-lists-diff.json`, finalized `stars-rebuild-recovery.json`, `stars-current-pre-write-state.json`, `application-preflight-validation.json`, `stars-final-state.json`, and `application-validation.json`. Independently revalidate all seven application artifacts. The semantic candidate remains byte-for-byte planned; applied status is external presentation metadata. Without a receipt, report planned state. Never silently ignore an invalid supplied receipt.
+- Independently revalidate the complete handoff before building:
 
   ```bash
-  node <skill-directory>/scripts/validate-analysis.mjs stars-analysis.json
+  node <skill-directory>/scripts/validate-analysis.mjs stars-analysis.json \
+    --semantic-run <semantic-run-directory> \
+    [--application-receipt <application-receipt.json>]
   ```
 
-  Stop on an invalid contract. Do not silently repair semantic content.
+  Stop unless the plan, external collection and execution receipts, deterministic
+  receipt, and exact candidate all match. Do not silently repair semantic content.
 
 ## Protect the run
 
@@ -59,10 +65,8 @@ semantic decision. This skill presents classification; it never performs it.
 
 ## Build and verify
 
-- Rebuild the chosen report artifact and its verification receipt from scratch
-  on every run. Never patch a previous generated report.
-- For the bundled implementation, read and follow
-  [references/default-react-system.md](references/default-react-system.md).
+- Rebuild the chosen report artifact and its verification receipt from scratch on every run. Never patch a previous generated report.
+- For the bundled implementation, read and follow [references/default-react-system.md](references/default-react-system.md).
 - For another system, use its normal dependency and build workflow, record the
   chosen implementation in the receipt, and provide equivalent deterministic,
   browser, visual, and accessibility verification. When an explicitly chosen
@@ -78,12 +82,12 @@ semantic decision. This skill presents classification; it never performs it.
 ## Deliver
 
 - Deliver the generated report artifact, its final verification receipt, the
-  validated `stars-analysis.json` path, the chosen report system, and honest
-  limitations.
+  validated `stars-analysis.json` and semantic run paths, the chosen report
+  system, and honest limitations.
 - When invoked by `tidy-my-stars`, finish reporting even when GitHub writes are
-  not authorized. The report then explains the frozen proposed plan. If an
-  authorized apply changes the frozen analysis, rebuild the report from the
-  post-apply file.
+  not authorized. The report always explains the frozen planned candidate. It
+  displays applied state only when a separate deterministic application receipt
+  passes, and never relabels candidate bytes as apply proof.
 
 ## Boundaries
 
@@ -92,5 +96,4 @@ semantic decision. This skill presents classification; it never performs it.
   validation notes in presentation.
 - Never unstar, write to GitHub, publish, deploy, add analytics, or load runtime
   third-party content without the required authorization.
-- Likely Unstar remains an AI recommendation for human review. Report-local
-  decisions do not change GitHub or the frozen analysis.
+- Likely Unstar remains an AI recommendation for human review; report-local decisions do not change GitHub or the frozen analysis.

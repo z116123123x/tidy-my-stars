@@ -36,6 +36,22 @@ List IDs contain letters or digits separated only by `.`, `_`, or `-`.
 declared List and has a nonblank reason. A queue-only repository still requires
 `unclassified_reason`.
 
+The analysis is accepted only with its complete semantic run directory. The
+report system independently revalidates `semantic-plan.json`, frozen sources,
+`collection-receipt.json`, `execution-receipts.json`, and
+`semantic-validation.json`; the supplied analysis must be exactly the plan's
+`candidate` and match its canonical SHA-256. The receipt is evidence only after
+it exactly matches a freshly derived passing receipt. The report handoff is a
+pre-write candidate and therefore requires `application_status: "planned"`.
+That field never changes. Optional applied state comes only after deterministic
+revalidation of the complete sibling artifact set:
+`stars-lists-diff.json`, finalized `stars-rebuild-recovery.json`,
+`stars-current-pre-write-state.json`, `application-preflight-validation.json`,
+`stars-final-state.json`, `application-receipt.json`, and
+`application-validation.json`. All seven must bind the same planned candidate.
+Missing application evidence means planned; malformed or incomplete supplied
+evidence is rejected.
+
 ## Semantic invariants
 
 - Input List names and descriptions, repository identities, memberships,
@@ -48,8 +64,20 @@ declared List and has a nonblank reason. A queue-only repository still requires
   broad. It is not quality, confidence, rank, or a target queue size.
 - Partial analyses are rejected. Refresh or finish `tidy-my-stars` before
   reporting.
+- A self-declared `validation.semantic_review: "passed"`, an unbound analysis,
+  or a sidecar receipt that was not independently rederived is rejected.
 - Do not enrich the report with newer GitHub facts. Rerun `tidy-my-stars` and
   rebuild when current facts are required.
+- Applied-state metadata may show only the validated receipt status and hashes;
+  it may not replace Lists, memberships, reasons, or any candidate byte.
+- The report loads one generated, schema-checked provenance document bound to
+  the exact candidate bytes and validated handoff. It visibly preserves every
+  semantic offline-validation limitation. When an application receipt exists,
+  it also preserves the exact complete application limitation array: every
+  preflight limitation plus each post-write limitation, with no duplicates or
+  paraphrased omissions. It describes `applied` only as a validated external
+  receipt claim, never as an authenticated live GitHub fact. Without that
+  receipt, the report clearly remains planned.
 
 ## Information architecture
 
@@ -109,13 +137,13 @@ Bundle required report assets locally unless the user explicitly authorized a
 different connected delivery environment. Do not add analytics or make live
 GitHub requests. The report contains no credentials and never writes GitHub.
 
-Treat the analysis, generated site, verification receipt, browser evidence, and
-review decisions as private per-run data. Keep created artifacts outside
-tracked, public, or synced locations whenever possible. Use `0700` generated
-directories and `0600` generated files on POSIX, or equivalent
-current-user-only access controls on the active platform. Inside a Git worktree,
-verify the intended paths are ignored and remain untracked before writing; move
-the run when they are not.
+Treat the analysis, semantic run and its source evidence and receipts, generated
+site, verification receipt, browser evidence, and review decisions as private
+per-run data. Keep created artifacts outside tracked, public, or synced
+locations whenever possible. Use `0700` generated directories and `0600`
+generated files on POSIX, or equivalent current-user-only access controls on the
+active platform. Inside a Git worktree, verify the intended paths are ignored
+and remain untracked before writing; move the run when they are not.
 
 Preview only through an explicit loopback bind such as `127.0.0.1` or `::1`.
 Refuse an all-interface bind, public tunnel, sync, publish, or deploy unless the
@@ -129,7 +157,10 @@ Every run replaces only a previously generated artifact belonging to the same
 implementation. Never erase an unmarked, user-owned output.
 
 Deliver the report artifact plus a machine-readable receipt that records the
-chosen implementation and binds the exact input and final output by SHA-256.
+chosen implementation and binds the exact input, semantic candidate, semantic
+plan, collection receipt, execution-receipts envelope, semantic-validation
+receipt, the complete deterministically revalidated seven-file applied artifact
+set when supplied, and final output by SHA-256.
 At minimum, the receipt contains `schema_version`, overall `status`, an
 `implementation` identity, input SHA-256, output SHA-256 and file inventory
 when the output is a directory, named checks, and overall `limitations`. Hash a
@@ -139,7 +170,9 @@ recomputed. Output names may follow the chosen system; do not reuse another
 implementation's receipt schema without identifying the difference.
 Verification covers:
 
-- complete input schema and exact data identity;
+- complete semantic handoff, input schema, and exact candidate/data identity;
+- generated provenance identity, schema, hashes, claim basis, and complete
+  semantic and optional application limitations;
 - a fresh deterministic rebuild or equivalent implementation projection;
 - output structure, destinations, local assets, and security boundaries;
 - the exact rendered browser experience on desktop and mobile;

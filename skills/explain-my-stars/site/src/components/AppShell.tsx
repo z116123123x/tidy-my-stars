@@ -37,11 +37,9 @@ export function AppShell() {
   const analysisStatus = model.analysis.run.analysis_status === 'complete'
     ? uiText(locale, 'Analysis complete', '分析完成')
     : `${uiText(locale, 'Analysis', '分析')} ${model.analysis.run.analysis_status}`;
-  const applicationStatus = model.analysis.run.application_status === 'planned'
-    ? uiText(locale, 'GitHub Lists not applied', 'GitHub Lists 尚未套用')
-    : model.analysis.run.application_status === 'applied'
-      ? uiText(locale, 'GitHub Lists applied', 'GitHub Lists 已套用')
-      : `GitHub ${model.analysis.run.application_status}`;
+  const applicationStatus = model.provenance.application.status === 'planned'
+    ? uiText(locale, 'Lists remain planned', 'Lists 仍為規劃')
+    : uiText(locale, 'Receipt claims Lists applied', '收據聲稱 Lists 已套用');
   const skipToContent = () => {
     const main = document.getElementById('main-content');
     main?.focus({ preventScroll: true });

@@ -9,6 +9,13 @@ function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+function rejectUnexpectedKeys(value, allowedKeys, path, errors) {
+  const allowed = new Set(allowedKeys);
+  for (const key of Object.keys(value)) {
+    if (!allowed.has(key)) errors.push(`${path}: unexpected field "${key}"`);
+  }
+}
+
 function isWellFormedString(value) {
   if (typeof value !== 'string') return false;
   for (let index = 0; index < value.length; index += 1) {
@@ -142,6 +149,13 @@ export function validateAnalysis(analysis) {
     return { valid: false, errors: ['$: analysis must be a JSON object'] };
   }
 
+  rejectUnexpectedKeys(
+    analysis,
+    ['schema_version', 'generated_at', 'locale', 'account', 'run', 'lists', 'repositories', 'validation'],
+    '$',
+    errors
+  );
+
   if (analysis.schema_version !== '1.0') {
     errors.push('schema_version: must equal "1.0"');
   }
@@ -155,6 +169,7 @@ export function validateAnalysis(analysis) {
   if (!isRecord(analysis.account)) {
     errors.push('account: must be an object');
   } else {
+    rejectUnexpectedKeys(analysis.account, ['login', 'star_count'], 'account', errors);
     if (!isNonblankString(analysis.account.login)) {
       errors.push('account.login: must be a nonblank string');
     }
@@ -166,6 +181,12 @@ export function validateAnalysis(analysis) {
   if (!isRecord(analysis.run)) {
     errors.push('run: must be an object');
   } else {
+    rejectUnexpectedKeys(
+      analysis.run,
+      ['likely_unstar_sensitivity', 'analysis_status', 'application_status'],
+      'run',
+      errors
+    );
     const sensitivity = analysis.run.likely_unstar_sensitivity;
     if (!Number.isInteger(sensitivity) || sensitivity < 1 || sensitivity > 10) {
       errors.push('run.likely_unstar_sensitivity: must be an integer from 1 through 10');
@@ -173,8 +194,8 @@ export function validateAnalysis(analysis) {
     if (analysis.run.analysis_status !== 'complete') {
       errors.push('run.analysis_status: must equal "complete"');
     }
-    if (!['planned', 'applied'].includes(analysis.run.application_status)) {
-      errors.push('run.application_status: must equal "planned" or "applied"');
+    if (analysis.run.application_status !== 'planned') {
+      errors.push('run.application_status: must equal "planned"; applied state belongs in an external application receipt');
     }
   }
 
@@ -195,6 +216,8 @@ export function validateAnalysis(analysis) {
       errors.push(`${path}: must be an object`);
       continue;
     }
+
+    rejectUnexpectedKeys(list, ['id', 'name', 'kind', 'description'], path, errors);
 
     if (!isNonblankString(list.id)) {
       errors.push(`${path}.id: must be a nonblank string`);
@@ -248,6 +271,13 @@ export function validateAnalysis(analysis) {
       continue;
     }
 
+    rejectUnexpectedKeys(
+      repository,
+      ['full_name', 'url', 'description', 'memberships', 'unclassified_reason'],
+      path,
+      errors
+    );
+
     if (!isNonblankString(repository.full_name)) {
       errors.push(`${path}.full_name: must be a nonblank string`);
     } else if (repository.full_name !== repository.full_name.trim()) {
@@ -278,6 +308,8 @@ export function validateAnalysis(analysis) {
         errors.push(`${membershipPath}: must be an object`);
         continue;
       }
+
+      rejectUnexpectedKeys(membership, ['list_id', 'reason'], membershipPath, errors);
 
       if (!isNonblankString(membership.list_id)) {
         errors.push(`${membershipPath}.list_id: must be a nonblank string`);
@@ -343,6 +375,12 @@ export function validateAnalysis(analysis) {
   if (!isRecord(analysis.validation)) {
     errors.push('validation: must be an object');
   } else {
+    rejectUnexpectedKeys(
+      analysis.validation,
+      ['coverage_status', 'semantic_review', 'notes'],
+      'validation',
+      errors
+    );
     if (analysis.validation.coverage_status !== 'complete') {
       errors.push('validation.coverage_status: must equal "complete"');
     }
