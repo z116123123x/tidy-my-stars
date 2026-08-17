@@ -83,7 +83,7 @@ export function ListsPage() {
       </section>
       <aside className="review-callout">
         <ShieldAlert aria-hidden="true" />
-        <div><p className="eyebrow">{t('Separate review workflow', '獨立的複核流程')}</p><h2>{t('Likely Unstar is not a topic List', '建議 Unstar 不是主題 List')}</h2><p>{t('It remains separate because it asks for a decision, not a browsing purpose.', '它要求使用者做決定，而不是提供瀏覽用途，因此保持獨立。')}</p></div>
+        <div><p className="eyebrow">{t('Separate review workflow', '獨立的複核流程')}</p><h2>{t('Star Review is not a topic List', 'Star 複核不是主題 List')}</h2><p>{t('It remains separate because it asks for a decision, not a browsing purpose.', '它要求使用者做決定，而不是提供瀏覽用途，因此保持獨立。')}</p></div>
         <Link className="button button--secondary" to="/review">{t('Open review queue', '開啟複核佇列')}</Link>
       </aside>
     </div>
@@ -163,7 +163,7 @@ export function RepositoryDetailPage() {
         monospaceTitle
         actions={<a className="button button--primary" href={repository.url} target="_blank" rel="noreferrer noopener">{t('Open GitHub', '在 GitHub 開啟')} <ExternalLink aria-hidden="true" size={16} /></a>}
       />
-      {reviewMembership ? <section className="repository-review-banner"><ShieldAlert aria-hidden="true" /><div><p className="eyebrow">{t('AI review suggestion', 'AI 複核建議')}</p><h2>{t('Likely Unstar', '建議 Unstar')}</h2><p>{reviewMembership.reason}</p><small>{t('This is a suggestion for you to inspect, not an automatic unstar.', '這只是請你檢視的建議，不會自動 unstar。')}</small></div><Link to={`/review/${encodeURIComponent(owner)}/${encodeURIComponent(name)}`}>{t('Review in context', '前往複核')} <ArrowRight size={16} /></Link></section> : null}
+      {reviewMembership ? <section className="repository-review-banner"><ShieldAlert aria-hidden="true" /><div><p className="eyebrow">{t('AI review suggestion', 'AI 複核建議')}</p><h2>{t('Star Review', 'Star 複核')}</h2><p>{reviewMembership.reason}</p><small>{t('This is a suggestion for you to inspect, not an automatic unstar.', '這只是請你檢視的建議，不會自動 unstar。')}</small></div><Link to={`/review/${encodeURIComponent(owner)}/${encodeURIComponent(name)}`}>{t('Review in context', '前往複核')} <ArrowRight size={16} /></Link></section> : null}
       <div className="detail-layout">
         <section className="detail-main" aria-labelledby="membership-heading">
           <div className="section-heading"><p className="eyebrow">{t('Classification', '分類')}</p><h2 id="membership-heading">{t('Where it belongs—and why', '它屬於哪些 Lists，以及原因')}</h2><p>{t(`${classificationMemberships.length} supported browsing ${classificationMemberships.length === 1 ? 'purpose' : 'purposes'}.`, `${classificationMemberships.length} 個有根據的瀏覽用途。`)}</p></div>

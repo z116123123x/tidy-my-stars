@@ -20,9 +20,9 @@
     },
     {
       "id": "likely-unstar",
-      "name": "Likely Unstar",
+      "name": "Star Review",
       "kind": "review-queue",
-      "description": "Repositories suggested for human review."
+      "description": "Repositories worth another look before you decide what still belongs in your Stars."
     }
   ],
   "repositories": [

@@ -41,7 +41,7 @@ Before collecting evidence, read and follow [references/semantic-analysis-contra
    - Identify its demonstrated primary purpose and every independently useful browsing outcome.
    - Do not classify from names, descriptions, topics, popularity, current Lists, keyword overlap, or a fixed ontology.
    - Do not turn interfaces, integrations, implementation details, maintenance workflows, or internal orchestration into categories unless they are a distinct first-class outcome a person would deliberately browse for.
-   - Keep a repository unclassified when primary evidence is exhausted and no supported outcome remains. Classification and retention are independent: being unclassified does not by itself include or exclude the repository from Likely Unstar. Do not invent a catch-all category.
+   - Keep a repository unclassified when primary evidence is exhausted and no supported outcome remains. Classification and retention are independent: being unclassified does not by itself include or exclude the repository from Star Review. Do not invent a catch-all category.
 
 3. Design one taxonomy after the whole inventory is understood.
    - Only after all semantic assessments pass, combine semantically equivalent outcomes into one global set of clear, direct browsing destinations. Use fewer than 31 classification Lists when fewer are more useful.
@@ -50,9 +50,9 @@ Before collecting evidence, read and follow [references/semantic-analysis-contra
    - Never use `Misc`, `Other`, `Curiosities`, `Unsorted`, or a renamed equivalent as an uncertainty destination.
 
 4. Make one user-decision recommendation queue.
-   - Keep exactly one clearly named queue that notifies the user of AI `Likely unstar` recommendations. Queue membership does not remove any supported classification membership; only the user decides whether to unstar.
+   - Keep exactly one queue named `Star Review` with the description `Repositories worth another look before you decide what still belongs in your Stars.` Queue membership does not remove any supported classification membership; only the user decides whether to unstar.
    - Read [references/likely-unstar-sensitivity.md](references/likely-unstar-sensitivity.md) before making queue decisions. Use the user's selected sensitivity, or level 5 when the user did not select one.
-   - At the start of every run, state `Likely Unstar sensitivity: <level>/10`, identify level 5 when it is the default, say that 1 is narrow and 10 is broad, and tell the user they may change it before GitHub writes. Continue without waiting when defaulting to level 5.
+   - At the start of every run, state `Star Review sensitivity: <level>/10`, identify level 5 when it is the default, say that 1 is narrow and 10 is broad, and tell the user they may change it before GitHub writes. Continue without waiting when defaulting to level 5.
    - After understanding the complete collection, use judgment to find every Star that likely gives this user too little practical, learning, research, historical, reference, or distinctive value to keep. This is a useful opinion about the user's collection, not a claim that the repository has zero value to everyone.
    - Make the recommendation from the repository's complete evidence and its place among the user's other Stars. Consider usefulness, quality, relevance, novelty, maturity, maintenance, and overlap when they matter. Use relevant external evidence when it materially improves that judgment. Do not require a formal lifecycle defect, a documented successor, or a comparator; do not let any one of those signals decide the outcome alone.
    - Apply the selected sensitivity to queue eligibility. Treat evidence strength as confidence and explanation, not as sensitivity. Do not target a numerical queue size.

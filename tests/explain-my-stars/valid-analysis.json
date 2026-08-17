@@ -50,9 +50,9 @@
     },
     {
       "id": "likely-unstar",
-      "name": "Likely Unstar",
+      "name": "Star Review",
       "kind": "review-queue",
-      "description": "AI recommendations for the user to review; never automatic removal."
+      "description": "Repositories worth another look before you decide what still belongs in your Stars."
     }
   ],
   "repositories": [

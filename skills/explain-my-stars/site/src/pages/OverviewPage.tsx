@@ -79,7 +79,7 @@ export function OverviewPage() {
           <Link className="route-card route-card--review" to="/review">
             <span className="route-card__icon"><ShieldAlert aria-hidden="true" /></span>
             <span className="route-card__number">03</span>
-            <strong>{t('Review likely unstars', `複核 ${model.reviewList.name}`)}</strong>
+            <strong>{t('Open Star Review', `開啟 ${model.reviewList.name}`)}</strong>
             <p>{t('Inspect one AI recommendation at a time. Nothing is automatically unstarred.', '一次查看一個 AI 建議；不會自動 unstar。')}</p>
             <span className="route-card__link">{t(`Review ${model.reviewRepositories.length} suggestions`, `複核 ${model.reviewRepositories.length} 個建議`)} <ArrowRight size={16} /></span>
           </Link>

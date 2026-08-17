@@ -222,7 +222,7 @@ export function buildValidPlan({ locale = 'en' } = {}) {
     { id: 'agent-tools', name: 'Agent Tools', kind: 'classification', description: 'Installable agent systems and capabilities.' },
     { id: 'cad-and-3d', name: 'CAD & 3D', kind: 'classification', description: 'Tools that create editable geometry and 3D outputs.' },
     { id: 'knowledge-tools', name: 'Knowledge Tools', kind: 'classification', description: 'Tools for indexing and exploring structured knowledge.' },
-    { id: 'likely-unstar', name: 'Likely Unstar', kind: 'review-queue', description: 'AI suggestions for the user to review before deciding.' }
+    { id: 'likely-unstar', name: 'Star Review', kind: 'review-queue', description: 'Repositories worth another look before you decide what still belongs in your Stars.' }
   ];
   const claims = [
     { claim_id: 'atlas-agent', repository: REPOSITORIES[0].full_name, intent_id: 'agent-workflow', list_id: 'agent-tools', reason: 'Its installable command API makes the project reusable as an agent capability.' },

@@ -107,7 +107,7 @@ describe('Stars site routing', () => {
     expect(await screen.findByRole('heading', { name: '站點地圖', level: 1 })).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Repositories' }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('link', { name: 'Lists' }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('link', { name: '建議 Unstar' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'Star 複核' }).length).toBeGreaterThan(0);
   });
 
   it('keeps the overview definition list structurally valid', async () => {
@@ -128,17 +128,17 @@ describe('Stars site routing', () => {
     expect(screen.getByText('It includes a visual interface for composing workflows.')).toBeInTheDocument();
   });
 
-  it('keeps Likely Unstar separate from classification Lists', async () => {
+  it('keeps Star Review separate from classification Lists', async () => {
     renderRoute('/lists');
     expect(await screen.findByRole('heading', { name: 'Lists', level: 1 })).toBeInTheDocument();
-    expect(screen.getByText('建議 Unstar 不是主題 List')).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /Likely Unstar\s+1 repos/ })).not.toBeInTheDocument();
+    expect(screen.getByText('Star 複核不是主題 List')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Star Review\s+1 repos/ })).not.toBeInTheDocument();
   });
 
-  it('routes a Likely Unstar search result to the review queue instead of a List 404', async () => {
-    renderRoute('/search?q=Likely%20Unstar');
+  it('routes a Star Review search result to the review queue instead of a List 404', async () => {
+    renderRoute('/search?q=Star%20Review');
     expect(await screen.findByRole('heading', { name: '搜尋全部內容', level: 1 })).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: /Likely Unstar/ }).some((link) => link.getAttribute('href') === '/review')).toBe(true);
+    expect(screen.getAllByRole('link', { name: /Star Review/ }).some((link) => link.getAttribute('href') === '/review')).toBe(true);
   });
 
   it('opens global search without mutating an inline body style blocked by the CSP', async () => {

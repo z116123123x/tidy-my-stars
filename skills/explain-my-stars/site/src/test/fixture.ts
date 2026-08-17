@@ -13,7 +13,7 @@ export const fixture: StarsAnalysis = {
   lists: [
     { id: 'agents', name: 'Agent Workflows', kind: 'classification', description: 'Runnable agent systems.' },
     { id: 'design', name: 'Design Tools', kind: 'classification', description: 'Tools for interface design.' },
-    { id: 'likely-unstar', name: 'Likely Unstar', kind: 'review-queue', description: 'Review suggestions.' }
+    { id: 'likely-unstar', name: 'Star Review', kind: 'review-queue', description: 'Repositories worth another look before you decide what still belongs in your Stars.' }
   ],
   repositories: [
     {

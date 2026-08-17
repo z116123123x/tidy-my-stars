@@ -1,6 +1,6 @@
 ---
 name: explain-my-stars
-description: Use when a structured GitHub Stars analysis needs a navigable report with search, Lists, repository details, membership reasons, and Likely Unstar review.
+description: Use when a structured GitHub Stars analysis needs a navigable report with search, Lists, repository details, membership reasons, and Star Review.
 license: Apache-2.0
 compatibility: Requires local filesystem access. The bundled React report requires Node.js ^22.22.2 || ^24.15.0 || >=26.0.0, npm 10+, and browser access.
 metadata:
@@ -96,4 +96,4 @@ Turn one frozen Stars analysis into a clear, navigable report. Preserve every se
   validation notes in presentation.
 - Never unstar, write to GitHub, publish, deploy, add analytics, or load runtime
   third-party content without the required authorization.
-- Likely Unstar remains an AI recommendation for human review; report-local decisions do not change GitHub or the frozen analysis.
+- Star Review remains an AI recommendation for human review; report-local decisions do not change GitHub or the frozen analysis.

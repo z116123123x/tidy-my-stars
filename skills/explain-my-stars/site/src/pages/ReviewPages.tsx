@@ -165,7 +165,7 @@ export function ReviewQueuePage() {
         <label><span className="sr-only">{t('Filter by classification List', '依分類 List 篩選')}</span><select value={listId} onChange={(event) => update('list', event.target.value)}><option value="">{t('All classifications', '所有分類')}</option>{model.classificationLists.map((list) => <option key={list.id} value={list.id}>{list.name}</option>)}</select></label>
       </section>
       <div className="directory-status" role="status">{t('', '顯示 ')}<strong>{repositories.length}</strong>{t(` of ${model.reviewRepositories.length} suggestions`, ` / ${model.reviewRepositories.length} 個建議`)}</div>
-      <section className="review-directory" aria-label={t('Likely Unstar suggestions', '建議 Unstar 清單')}>
+      <section className="review-directory" aria-label={t('Star Review suggestions', 'Star 複核建議')}>
         {repositories.length ? <Virtuoso data={repositories} increaseViewportBy={200} itemContent={(index, repository) => {
           const reason = repository.memberships.find((membership) => membership.list_id === model.reviewList.id)?.reason;
           const decision = decisions[repository.full_name];
@@ -188,7 +188,7 @@ export function ReviewDetailPage() {
     model.provenance.semantic.candidate_sha256
   );
   if (!repository || !model.reviewRepositories.some((candidate) => candidate.full_name === repository.full_name)) {
-    return <div className="page"><PageHeader eyebrow={t('Review', '複核')} title={t('Suggestion not found', '找不到此建議')} description={t('This repository is not in the current Likely Unstar queue.', '這個 repository 不在目前的建議 Unstar 佇列中。')} /><Link className="button button--primary" to="/review">{t('Return to queue', '返回佇列')}</Link></div>;
+    return <div className="page"><PageHeader eyebrow={t('Review', '複核')} title={t('Suggestion not found', '找不到此建議')} description={t('This repository is not in the current Star Review queue.', '這個 repository 不在目前的 Star 複核佇列中。')} /><Link className="button button--primary" to="/review">{t('Return to queue', '返回佇列')}</Link></div>;
   }
   const index = model.reviewRepositories.findIndex((candidate) => candidate.full_name === repository.full_name);
   const previous = model.reviewRepositories[index - 1];
@@ -199,10 +199,10 @@ export function ReviewDetailPage() {
 
   return (
     <div className="page page--review-detail">
-      <PageHeader eyebrow={t(`Review ${index + 1} of ${model.reviewRepositories.length}`, `複核第 ${index + 1} / ${model.reviewRepositories.length} 筆`)} title={repository.full_name} description={repository.description || t('No repository description was available.', '沒有可用的 repository 說明。')} crumbs={[{ label: t('Likely Unstar', '建議 Unstar'), to: '/review' }, { label: repository.full_name }]} monospaceTitle />
+      <PageHeader eyebrow={t(`Review ${index + 1} of ${model.reviewRepositories.length}`, `複核第 ${index + 1} / ${model.reviewRepositories.length} 筆`)} title={repository.full_name} description={repository.description || t('No repository description was available.', '沒有可用的 repository 說明。')} crumbs={[{ label: t('Star Review', 'Star 複核'), to: '/review' }, { label: repository.full_name }]} monospaceTitle />
       <div className="review-detail-layout">
         <section className="review-evidence">
-          <div className="review-reason-block"><p className="eyebrow">{t('Why AI surfaced it', 'AI 為什麼提出這個建議')}</p><h2>{t('Likely Unstar reason', '建議 Unstar 的理由')}</h2><p>{reason}</p><small>{t('This is evidence for your review, not an instruction to remove it.', '這是供你複核的依據，不是要求移除的指令。')}</small></div>
+          <div className="review-reason-block"><p className="eyebrow">{t('Why AI surfaced it', 'AI 為什麼提出這個建議')}</p><h2>{t('Star Review reason', 'Star 複核理由')}</h2><p>{reason}</p><small>{t('This is evidence for your review, not an instruction to remove it.', '這是供你複核的依據，不是要求移除的指令。')}</small></div>
           <div className="section-heading"><p className="eyebrow">{t('What remains useful', '仍然有用的部分')}</p><h2>{t('Current classifications', '目前分類')}</h2></div>
           <div className="membership-stack">
             {classifications.length ? classifications.map((membership) => {

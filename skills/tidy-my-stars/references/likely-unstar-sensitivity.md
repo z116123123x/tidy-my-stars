@@ -1,4 +1,4 @@
-# Likely Unstar Sensitivity
+# Star Review Sensitivity
 
 Sensitivity is the run-level threshold for adding repositories to the
 user-decision queue. It is not a repository quality score, evidence confidence,
@@ -10,7 +10,7 @@ a repository that qualifies at one level also qualifies at every higher level.
 
 A numeric selection is valid only when it is a whole-number level from 1
 through 10. If the user explicitly supplies any other numeric value, do not
-clamp, round, or default it. State `Likely Unstar sensitivity: invalid
+clamp, round, or default it. State `Star Review sensitivity: invalid
 (<value>). Choose a whole-number level from 1 to 10; 1 is narrow and 10 is
 broad.` Obtain a valid level before continuing the run.
 

@@ -344,7 +344,7 @@ function buildValidPlan() {
         { id: 'agent-tools', name: 'Agent Tools', kind: 'classification', description: 'Installable agent systems and capabilities.' },
         { id: 'cad-and-3d', name: 'CAD & 3D', kind: 'classification', description: 'Tools that create editable geometry and 3D outputs.' },
         { id: 'knowledge-tools', name: 'Knowledge Tools', kind: 'classification', description: 'Tools for indexing and exploring structured knowledge.' },
-        { id: 'likely-unstar', name: 'Likely Unstar', kind: 'review-queue', description: 'AI suggestions for the user to review before deciding.' }
+        { id: 'likely-unstar', name: 'Star Review', kind: 'review-queue', description: 'Repositories worth another look before you decide what still belongs in your Stars.' }
       ],
       classification_claims: [
         { claim_id: 'atlas-agent', repository: REPOSITORIES.atlas.full_name, intent_id: 'agent-workflow', list_id: 'agent-tools', reason: 'Its installable command API makes the project reusable as an agent capability.' },
@@ -870,7 +870,7 @@ test('evidence-exhausted available source may remain unresolved and exactly uncl
   }
 });
 
-test('available evidence may establish no stable purpose while supporting Likely Unstar', () => {
+test('available evidence may establish no stable purpose while supporting Star Review', () => {
   const plan = makeAvailableNoPurposeLikelyUnstar(buildValidPlan());
   const result = validateSemanticPlan(plan, { baseDirectory: fixtureRoot, ...externalArtifacts(plan) });
   assert.equal(result.valid, true, result.errors.join('\n'));
@@ -1051,7 +1051,7 @@ test('exports complete provider-neutral stage contracts and hashes the exact con
     ],
     taxonomy: [
       'taxonomy.complete-collection-first', 'taxonomy.merge-equivalent-outcomes',
-      'taxonomy.clear-direct-destinations', 'taxonomy.list-limits',
+      'taxonomy.clear-direct-destinations', 'taxonomy.list-limits', 'taxonomy.star-review-identity',
       'taxonomy.overlap-all-intents', 'taxonomy.singleton-allowed',
       'taxonomy.no-catchall', 'taxonomy.classification-retention-independent',
       'taxonomy.queue-preserves-classifications', 'taxonomy.review-reason-exact',

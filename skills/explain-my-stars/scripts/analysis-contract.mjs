@@ -3,6 +3,8 @@ import { TextDecoder } from 'node:util';
 
 const CLASSIFICATION_KIND = 'classification';
 const REVIEW_QUEUE_KIND = 'review-queue';
+const STAR_REVIEW_NAME = 'Star Review';
+const STAR_REVIEW_DESCRIPTION = 'Repositories worth another look before you decide what still belongs in your Stars.';
 const LIST_KINDS = new Set([CLASSIFICATION_KIND, REVIEW_QUEUE_KIND]);
 
 function isRecord(value) {
@@ -234,6 +236,12 @@ export function validateAnalysis(analysis) {
       classificationLists += 1;
     } else {
       reviewQueues += 1;
+      if (list.name !== STAR_REVIEW_NAME) {
+        errors.push(`${path}.name: review-queue must equal "${STAR_REVIEW_NAME}"`);
+      }
+      if (list.description !== STAR_REVIEW_DESCRIPTION) {
+        errors.push(`${path}.description: review-queue must equal the canonical Star Review description`);
+      }
     }
 
     listIds.push({ value: list.id, path: `${path}.id` });

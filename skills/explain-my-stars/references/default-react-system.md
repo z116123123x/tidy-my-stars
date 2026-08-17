@@ -95,7 +95,7 @@ hash router is not a `file://` artifact. Never omit the explicit loopback bind.
 Use an isolated browser against the exact final bytes.
 
 1. Test overview, site map, global search, List directory and detail,
-   repository directory and detail, Likely Unstar queue and one-item review,
+   repository directory and detail, Star Review queue and one-item review,
    Methods, and Print & export.
 2. Test direct hash URLs, reload, Back/Forward, query restoration,
    `Cmd/Ctrl+K`, Arrow/Enter search selection, skip control, mobile menu, and

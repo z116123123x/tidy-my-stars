@@ -50,9 +50,9 @@
     },
     {
       "id": "likely-unstar",
-      "name": "Likely Unstar",
+      "name": "Star Review",
       "kind": "review-queue",
-      "description": "AI recommendations for human review; nothing is unstarred automatically."
+      "description": "Repositories worth another look before you decide what still belongs in your Stars."
     }
   ],
   "repositories": [
@@ -179,7 +179,7 @@
         },
         {
           "list_id": "likely-unstar",
-          "reason": "Likely unstar: the maintained successor preserves the useful workflow with clearer operation and support."
+          "reason": "The maintained successor preserves the useful workflow with clearer operation and support."
         }
       ]
     },
@@ -194,7 +194,7 @@
         },
         {
           "list_id": "likely-unstar",
-          "reason": "Likely unstar: its only practical capability is already covered by several stronger maintained tools in the collection."
+          "reason": "Its only practical capability is already covered by several stronger maintained tools in the collection."
         }
       ]
     },
@@ -205,7 +205,7 @@
       "memberships": [
         {
           "list_id": "likely-unstar",
-          "reason": "Likely unstar: the prototype offers no durable practical, learning, reference, or distinctive value to keep."
+          "reason": "The prototype offers no durable practical, learning, reference, or distinctive value to keep."
         }
       ],
       "unclassified_reason": "The available evidence does not support a durable browsing destination beyond review for removal."

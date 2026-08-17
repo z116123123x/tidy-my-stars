@@ -170,17 +170,17 @@ const DEMO_RETENTION_DECISIONS = Object.freeze({
   },
   'sample-labs/legacy-runner': {
     judgment: 'likely-unstar',
-    reason: 'Likely unstar: the maintained successor preserves the useful workflow with clearer operation and support.',
+    reason: 'The maintained successor preserves the useful workflow with clearer operation and support.',
     comparatorRepositories: ['sample-labs/orbit-agent']
   },
   'sample-labs/duplicate-shell': {
     judgment: 'likely-unstar',
-    reason: 'Likely unstar: its only practical capability is already covered by several stronger maintained tools in the collection.',
+    reason: 'Its only practical capability is already covered by several stronger maintained tools in the collection.',
     comparatorRepositories: ['sample-labs/schema-studio', 'sample-labs/toolsmith']
   },
   'sample-labs/abandoned-widget': {
     judgment: 'likely-unstar',
-    reason: 'Likely unstar: the prototype offers no durable practical, learning, reference, or distinctive value to keep.',
+    reason: 'The prototype offers no durable practical, learning, reference, or distinctive value to keep.',
     comparatorRepositories: []
   },
   'sample-labs/unclear-prototype': {

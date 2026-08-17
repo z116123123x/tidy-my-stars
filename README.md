@@ -6,7 +6,7 @@
 
 Turn every GitHub Star into useful, overlapping Lists and a searchable report.
 
-**Never automatically unstars anything.** `Likely Unstar` is a review queue;
+**Never automatically unstars anything.** `Star Review` is a review queue;
 the user always makes the final decision.
 
 [**Try the live synthetic demo →**](https://z116123123x.github.io/tidy-my-stars/)
@@ -40,11 +40,11 @@ both, and installing only one is incomplete.
 The generated report is a navigable collection explorer, not a flat export.
 Start from a compact overview or site map, search repositories, Lists, and
 exact classification reasons, follow overlapping Lists, and review each
-Likely Unstar suggestion without changing GitHub.
+Star Review suggestion without changing GitHub.
 
-![Synthetic Stars Library overview with persistent navigation, collection counts, and direct paths to repositories, Lists, and Likely Unstar review.](docs/assets/report-overview.jpg)
+![Synthetic Stars Library overview with persistent navigation, collection counts, and direct paths to repositories, Lists, and Star Review.](docs/assets/report-overview.jpg)
 
-![Synthetic Likely Unstar review with the AI rationale, remaining List classification, and local Keep, Decide later, and Consider unstar controls.](docs/assets/report-review.jpg)
+![Synthetic Star Review page with the AI rationale, remaining List classification, and local Keep, Decide later, and Consider unstar controls.](docs/assets/report-review.jpg)
 
 _These images use [entirely synthetic demo data](docs/demo/synthetic-analysis.json).
 Real reports can expose private repositories, memberships, and AI review
@@ -59,8 +59,9 @@ reasons, so keep them private unless separately reviewed for publication._
    remains.
 3. Understands the whole collection before deriving up to 31 clear,
    overlapping classification Lists.
-4. Creates exactly one human-decision queue for AI `Likely Unstar`
-   recommendations. It never unstars a repository.
+4. Creates exactly one human-decision queue named `Star Review`. It contains
+   repositories worth another look before the user decides what still belongs
+   in their Stars. It never unstars a repository.
 5. Freezes and independently reviews the candidate, then reads current Lists and
    memberships only to calculate one exact full-replacement diff.
 6. Validates the complete semantic run and exact planned `stars-analysis.json`,
@@ -147,10 +148,10 @@ Tidy my stars
 Optional controls can be stated in the same request:
 
 ```text
-Tidy my stars. Use Likely Unstar sensitivity 7/10 and build the report in my existing SvelteKit app.
+Tidy my stars. Use Star Review sensitivity 7/10 and build the report in my existing SvelteKit app.
 ```
 
-Likely Unstar sensitivity ranges from 1 (narrow) to 10 (broad) and defaults to
+Star Review sensitivity ranges from 1 (narrow) to 10 (broad) and defaults to
 5. The queue is only a recommendation for the user to review.
 
 The bundled React implementation outputs:

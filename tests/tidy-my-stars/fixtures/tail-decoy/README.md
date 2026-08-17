@@ -46,7 +46,7 @@ node tests/tidy-my-stars/run-tail-decoy-canary.mjs check <absolute-workspace>
 
 The first gate is deterministic: the harness invokes the real offline semantic
 validator, verifies product-versus-catalog behavior, the decisive tail anchor,
-the scratchpad's unclassified plus Likely Unstar outcome, rejected
+the scratchpad's unclassified plus Star Review outcome, rejected
 decoys/injection, and unchanged collector evidence. The second gate compares a
 complete semantic snapshot,
 including primary-purpose text, intent outcomes, List names/descriptions,

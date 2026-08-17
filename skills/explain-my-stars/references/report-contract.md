@@ -88,7 +88,7 @@ reloadable destinations for:
 - an explicit site map and global repository, List, and reason search;
 - classification List directory and detail views;
 - repository directory and canonical detail views with every exact reason;
-- Likely Unstar queue and one-item human-review views;
+- Star Review queue and one-item human-review views;
 - methods, limitations, export, and a complete print projection.
 
 Navigation, filters, and selected records survive reload and Back/Forward when

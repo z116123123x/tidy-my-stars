@@ -190,6 +190,24 @@ test('validator rejects unexpected fields at every stars-analysis object boundar
   }
 });
 
+test('validator requires the canonical Star Review name and description', () => {
+  const baseline = JSON.parse(readFileSync(fixture, 'utf8'));
+  const reviewQueue = baseline.lists.find((list) => list.kind === 'review-queue');
+  assert.ok(reviewQueue);
+
+  const renamed = structuredClone(baseline);
+  renamed.lists.find((list) => list.kind === 'review-queue').name = 'Likely Unstar';
+  const renamedResult = validateAnalysis(renamed);
+  assert.equal(renamedResult.valid, false);
+  assert.match(renamedResult.errors.join('\n'), /review-queue must equal "Star Review"/);
+
+  const redescribed = structuredClone(baseline);
+  redescribed.lists.find((list) => list.kind === 'review-queue').description = 'Review suggestions.';
+  const redescribedResult = validateAnalysis(redescribed);
+  assert.equal(redescribedResult.valid, false);
+  assert.match(redescribedResult.errors.join('\n'), /canonical Star Review description/);
+});
+
 test('all public report CLIs require an explicit semantic run', () => {
   assert.match(runWithoutSemanticRun('validate-analysis.mjs', [fixture]).stderr, /--semantic-run/);
   assert.match(runWithoutSemanticRun('build-site.mjs', ['--input', fixture, '--output', 'unused']).stderr, /--semantic-run/);

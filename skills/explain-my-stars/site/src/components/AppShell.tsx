@@ -20,7 +20,7 @@ const links = [
   { to: '/search', en: 'Search', zh: '搜尋', icon: Search },
   { to: '/repositories', en: 'Repositories', zh: 'Repositories', icon: Library },
   { to: '/lists', en: 'Lists', zh: 'Lists', icon: FolderTree },
-  { to: '/review', en: 'Likely Unstar', zh: '建議 Unstar', icon: ArchiveX },
+  { to: '/review', en: 'Star Review', zh: 'Star 複核', icon: ArchiveX },
   { to: '/sitemap', en: 'Site map', zh: '站點地圖', icon: Map },
   { to: '/methods', en: 'Methods', zh: '方法', icon: BookOpen },
   { to: '/print', en: 'Print & export', zh: '列印與匯出', icon: FileText }
